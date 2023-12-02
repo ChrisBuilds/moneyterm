@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "moneyterm"
+version = "0.1.0"
+description = "Terminal finance dashboard."
+authors = ["Chris <741258+github@pm.me>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ofxparse = "^0.21"
+textual = "^0.44.0"
+
+[tool.poetry.group.dev.dependencies]
+textual-dev = "^1.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
