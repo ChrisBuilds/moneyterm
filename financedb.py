@@ -4,6 +4,28 @@ from ofxparse import Account, Transaction  # type: ignore
 
 DB_PATH = Path("data/finance.sqlite")
 
+ACCOUNT_ROW = tuple[int, str, str, str]
+TRANSACTION_ROW = tuple[
+    int,
+    str,
+    str,
+    str,
+    str,
+    str,
+    float,
+    int,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+]
+
 
 class FinanceDB:
     """Manage the sqlite database containing finance data."""
@@ -81,7 +103,7 @@ class FinanceDB:
         """
         self._execute_query(delete_statement)
 
-    def query_accounts(self, account_number: str | None = None) -> list[tuple[int | str]]:
+    def query_accounts(self, account_number: str | None = None) -> list[ACCOUNT_ROW]:
         """Query database for account by account number, or all if no number is given."""
         if not account_number:
             account_query = f"""
@@ -95,7 +117,7 @@ class FinanceDB:
             accounts = self._execute_read_query(account_query)
         return accounts
 
-    def query_transactions(self, transaction_id: str | None = None) -> list[tuple[int | str | None | float]]:
+    def query_transactions(self, transaction_id: str | None = None) -> list[TRANSACTION_ROW]:
         """Query database for transaction by transaction id, or all if no id is given."""
         if not transaction_id:
             transaction_query = f"""
@@ -108,7 +130,7 @@ class FinanceDB:
         transactions = self._execute_read_query(transaction_query)
         return transactions
 
-    def query_categories(self, category_id: int | None = None) -> list[tuple[int | str] | None]:
+    def query_categories(self, category_id: int | None = None) -> list[tuple[int, str]]:
         """Query database for category by category id, or all if no id is given."""
         if not category_id:
             category_query = f"""
@@ -133,16 +155,16 @@ class FinanceDB:
             """
             self._execute_query(insert_statement)
 
-    def delete_category(self, category_str: str = None, category_id: int = None) -> None:
+    def delete_category(self, category_str: str | None = None, category_id: int | None = None) -> None:
         """Delete a category from the database."""
         if not category_str and not category_id:
-            return
+            raise ValueError("finanacedb.delete_category: Must provide either category string or category id.")
         delete_statement = f"""
         DELETE FROM categories WHERE {'category' if category_str else 'id'} = '{category_str if category_str else category_id}';
         """
         self._execute_query(delete_statement)
 
-    def query_tags(self, tag_id: int | None = None) -> list[tuple[int | str] | None]:
+    def query_tags(self, tag_id: int | None = None) -> list[tuple[int, str]]:
         """Query database for tag by tag id, or all if no id is given."""
         if not tag_id:
             tag_query = f"""
