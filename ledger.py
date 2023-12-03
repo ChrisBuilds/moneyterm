@@ -36,7 +36,7 @@ class Ledger:
         self.accounts: dict[str, Account] = dict()
         self.transactions: dict[str, Transaction] = dict()
         self.read_db()
-        self.message_log = []
+        self.message_log: list[str] = []
         self.data_dates: defaultdict[int, set[tuple[int, str]]] = self.find_dates_with_tx_activity()
 
     def find_dates_with_tx_activity(self) -> defaultdict[int, set[tuple[int, str]]]:
@@ -53,7 +53,7 @@ class Ledger:
     def get_tx_by_txid(self, txid: str) -> Transaction | None:
         return self.transactions.get(txid)
 
-    def get_tx_by_month(self, month: int, year: int) -> list[Transaction | None]:
+    def get_tx_by_month(self, month: int, year: int) -> list[Transaction]:
         """Get all transactions from a given month and year."""
         if month not in range(1, 13):
             return []
@@ -71,7 +71,7 @@ class Ledger:
             transaction = self._make_tx_from_row(transaction_row)
             self.transactions[transaction.txid] = transaction
 
-    def import_transaction_data(self, data_file: Path):
+    def import_transaction_data(self, data_file: Path) -> None:
         if not data_file.exists():
             return
         ofx_data = data_importer.load_ofx_data(data_file)
@@ -159,7 +159,7 @@ class Ledger:
     def add_category_to_tx(self, transaction: Transaction, category_str: str) -> None:
         if len(transaction.categories) == 5:
             self.message_log.append(
-                f"Cannot add category: {category_str} to transaction. Transaction had 5 (max) categories."
+                f"Cannot add category: {category_str} to transaction. Transaction has 5 (max) categories."
             )
         else:
             self.db.add_category_to_tx(transaction.txid, category_str)
