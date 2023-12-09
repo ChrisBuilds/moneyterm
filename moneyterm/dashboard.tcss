@@ -1,0 +1,24 @@
+#transactions_table_screen {
+    width: 100%;
+    height: 100%; 
+}
+
+#transaction_screen_selectors_bar {
+    height: auto;
+}
+
+#transactions_table {
+    width: auto;
+    height: auto;
+}
+
+TransactionDetailScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+# #transaction_detail_markdown {
+#     width: auto;
+#     height: auto;
+# }
