@@ -1,10 +1,11 @@
+import datetime
 import pytest
-from financedb import FinanceDB
-from ledger import Ledger
+from moneyterm.utils.financedb import FinanceDB
+from moneyterm.utils.ledger import Ledger
+from moneyterm.utils import data_importer
 from pathlib import Path
-import data_importer
 from collections import namedtuple
-from ledger import Transaction
+from moneyterm.utils.ledger import Transaction
 
 DBTransaction = namedtuple("DBTransaction", ["date", "id", "memo", "payee", "type", "amount", "number"])
 Account = namedtuple("Account", ["number", "account_type", "institution"])
@@ -33,9 +34,10 @@ def dbtransaction():
 
 @pytest.fixture(scope="function")
 def transaction() -> Transaction:
+    date_object = datetime.datetime.strptime("2023-01-09 12:00:00", "%Y-%m-%d %H:%M:%S")
     tx = Transaction(
         9999,
-        "2023-01-09 12:00:00",
+        date_object,
         "8008",
         "Test Transaction Fixture",
         "TEST PAYEE",
@@ -58,7 +60,7 @@ def account():
 @pytest.fixture(scope="session")
 def ofx_parsed():
     parsed = []
-    ofx_paths = (Path("test1.QFX"), Path("test2.QFX"), Path("test3.QFX"))
+    ofx_paths = (Path("test_data/test1.QFX"), Path("test_data/test2.QFX"), Path("test_data/test3.QFX"))
     for ofx_path in ofx_paths:
         parsed.append(data_importer.load_ofx_data(TEST_DIR / ofx_path))
     return parsed

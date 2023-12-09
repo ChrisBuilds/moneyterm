@@ -1,7 +1,7 @@
 from datetime import datetime
 from dataclasses import dataclass
-from financedb import FinanceDB
-import data_importer
+from moneyterm.utils.financedb import FinanceDB
+from moneyterm.utils import data_importer
 from collections import defaultdict
 from pathlib import Path
 
@@ -39,25 +39,35 @@ class Ledger:
         self.message_log: list[str] = []
         self.data_dates: defaultdict[int, set[tuple[int, str]]] = self.find_dates_with_tx_activity()
 
-    def find_dates_with_tx_activity(self) -> defaultdict[int, set[tuple[int, str]]]:
+    def find_dates_with_tx_activity(self, account_number: str | None = None) -> defaultdict[int, set[tuple[int, str]]]:
         """
-        Return dict of year : (month, month_name) pairs for all months with transaction data.
+        Return dict of year : (month, month_name) pairs for all months with transaction data for the given account. If
+        not account is given, all transactions are considered.
         Returns:
-            collections.defaultdict:
+            defaultdict[int, set[tuple[int, str]]]: dict of year : (month, month_name) pairs
         """
         dates = defaultdict(set)
         for tx in self.transactions.values():
-            dates[tx.date.year].add((tx.date.month, tx.date.strftime("%B")))
+            if account_number is None or tx.account_number == account_number:
+                dates[tx.date.year].add((tx.date.month, tx.date.strftime("%B")))
         return dates
 
-    def get_tx_by_txid(self, txid: str) -> Transaction | None:
-        return self.transactions.get(txid)
+    def get_tx_by_txid(self, txid: str) -> Transaction:
+        transaction = self.transactions.get(txid)
+        if transaction is None:
+            self.message_log.append(f"Transaction {txid} not found.")
+            raise ValueError(f"Transaction {txid} not found.")
+        return transaction
 
-    def get_tx_by_month(self, month: int, year: int) -> list[Transaction]:
+    def get_tx_by_month(self, account_number: str, year: int, month: int) -> list[Transaction]:
         """Get all transactions from a given month and year."""
         if month not in range(1, 13):
             return []
-        tx_list = [tx for tx in self.transactions.values() if tx.date.month == month and tx.date.year == year]
+        tx_list = [
+            tx
+            for tx in self.transactions.values()
+            if tx.account_number == account_number and tx.date.month == month and tx.date.year == year
+        ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
     def read_db(self) -> None:
@@ -88,7 +98,7 @@ class Ledger:
         payee = tx_row[4]
         tx_type = tx_row[5]
         amount = tx_row[6]
-        account_number = tx_row[7]
+        account_number = str(tx_row[7])
         categories = []
         categories.extend([cat for cat in tx_row[8:13] if cat])
         tags = []

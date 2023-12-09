@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from ofxparse import Account, Transaction  # type: ignore
 
-DB_PATH = Path("data/finance.sqlite")
+DB_PATH = Path("moneyterm/data/real.sqlite")
 
 ACCOUNT_ROW = tuple[int, str, str, str]
 TRANSACTION_ROW = tuple[
@@ -86,6 +86,19 @@ class FinanceDB:
         """
         self._execute_query(delete_statement)
 
+    def query_transactions(self, transaction_id: str | None = None) -> list[TRANSACTION_ROW]:
+        """Query database for transaction by transaction id, or all if no id is given."""
+        if not transaction_id:
+            transaction_query = f"""
+            SELECT * FROM transactions;
+            """
+        else:
+            transaction_query = f"""
+            SELECT * FROM transactions WHERE txid = '{transaction_id}';
+            """
+        transactions = self._execute_read_query(transaction_query)
+        return transactions
+
     def insert_account(self, account: Account) -> None:
         """Insert an account into the accounts table."""
         insert_statement = f"""
@@ -116,19 +129,6 @@ class FinanceDB:
             """
             accounts = self._execute_read_query(account_query)
         return accounts
-
-    def query_transactions(self, transaction_id: str | None = None) -> list[TRANSACTION_ROW]:
-        """Query database for transaction by transaction id, or all if no id is given."""
-        if not transaction_id:
-            transaction_query = f"""
-            SELECT * FROM transactions;
-            """
-        else:
-            transaction_query = f"""
-            SELECT * FROM transactions WHERE txid = '{transaction_id}';
-            """
-        transactions = self._execute_read_query(transaction_query)
-        return transactions
 
     def query_categories(self, category_id: int | None = None) -> list[tuple[int, str]]:
         """Query database for category by category id, or all if no id is given."""
