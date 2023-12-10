@@ -1,31 +1,19 @@
-from textual import log, on, events
-from textual.message import Message
-from textual.app import App, ComposeResult
-from textual.screen import Screen, ModalScreen
+from textual import on, events
+from textual.app import ComposeResult
+from textual.screen import Screen
 from textual.widgets import (
     Header,
     Footer,
     DataTable,
     TabbedContent,
-    Placeholder,
     TabPane,
-    Static,
-    Button,
-    ListItem,
-    ListView,
     Label,
     Select,
-    Rule,
-    OptionList,
-    Input,
-    Markdown,
 )
-from textual.containers import Vertical, Horizontal, VerticalScroll
-from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.utils.financedb import FinanceDB
-from moneyterm.screens.tagselectorscreen import TagSelectorScreen
+from textual.containers import Horizontal
+from moneyterm.utils.ledger import Ledger
+from moneyterm.screens.tagselectorscreen import TransactionTaggerScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
-from pathlib import Path
 
 
 class TransactionTable(DataTable):
@@ -48,23 +36,36 @@ class TransactionTable(DataTable):
                 tx.amount,
                 tx.account_number,
                 ",".join(tx.categories),
-                ",".join(tx.tags),
+                ",".join(sorted(tx.tags)),
                 key=tx.txid,
             )
 
     def on_key(self, key: events.Key) -> None:
+        def update_row_tags(*args):
+            if self.selected_row_key is None:
+                return
+            self.update_cell(
+                self.selected_row_key, "TAGS", ",".join(sorted(self.ledger.get_tx_by_txid(self.selected_row_key).tags))
+            )
+
         def get_selected_tag(tag: str):
             if tag:
                 self.apply_tag_to_selected_transaction(tag)
+                update_row_tags()
 
         if key.key == "t":
-            self.app.push_screen(TagSelectorScreen(self.ledger), get_selected_tag)
+            if self.selected_row_key:
+                selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
+                self.app.push_screen(TransactionTaggerScreen(self.ledger, selected_transaction), get_selected_tag)
         elif key.key == "i":
             if self.selected_row_key:
                 transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-                self.app.push_screen(TransactionDetailScreen(transaction))
+                self.app.push_screen(TransactionDetailScreen(self.ledger, transaction), update_row_tags)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        self.selected_row_key = event.row_key.value
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         self.selected_row_key = event.row_key.value
 
     def apply_tag_to_selected_transaction(self, tag: str) -> None:
@@ -72,9 +73,13 @@ class TransactionTable(DataTable):
         if self.selected_row_key is None:
             return
         self.log(f"Applying tag {tag} to transaction {self.ledger.get_tx_by_txid(self.selected_row_key)}")
+        selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
+        self.ledger.add_tag_to_tx(selected_transaction, tag)
 
 
 class TransactionsTableScreen(Screen):
+    CSS_PATH = "../tcss/transactionstablescreen.tcss"
+
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
         self.ledger = ledger
@@ -90,22 +95,24 @@ class TransactionsTableScreen(Screen):
 
         yield Header()
         yield Footer()
-        with Horizontal():
+        with Horizontal(id="selectors_bar"):
             yield Label("Account")
             yield self.account_select
             yield Label("Year")
             yield self.year_select
             yield Label("Month")
             yield self.month_select
-        with TabbedContent(initial="transactions", id="tabbed_content"):
-            with TabPane("Transactions", id="transactions"):
+        with TabbedContent(initial="transactions_tab", id="tabbed_content"):
+            with TabPane("Overview", id="overview_tab"):
+                yield Label("Overview")
+            with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
 
     def on_mount(self) -> None:
         """Mount the widgets."""
 
         for label in ("Date", "PAYEE", "TYPE", "AMOUNT", "ACCOUNT", "CATEGORIES", "TAGS"):
-            self.transactions_table.add_column(label)
+            self.transactions_table.add_column(label, key=label)
         account_select = self.query_one("#account_select", Select)
         account_select_options = [(account, account) for account in self.ledger.accounts]
         account_select.set_options(account_select_options)
