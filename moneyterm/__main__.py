@@ -9,7 +9,7 @@ class DashboardApp(App):
 
     DB = FinanceDB()
     LEDGER = Ledger(DB)
-    CSS_PATH = "dashboard.tcss"
+    CSS_PATH = "tcss/moneyterm.tcss"
     BINDINGS = []
     SCREENS = {"transactions_table": TransactionsTableScreen(LEDGER)}
 
