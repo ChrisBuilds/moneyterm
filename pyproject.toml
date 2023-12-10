@@ -10,6 +10,7 @@ readme = "README.md"
 python = "^3.10"
 ofxparse = "^0.21"
 textual = "^0.44.0"
+rich = "^13.7.0"
 
 [tool.poetry.group.dev.dependencies]
 textual-dev = "^1.2.1"
