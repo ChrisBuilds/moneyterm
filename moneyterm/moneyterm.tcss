@@ -1,15 +1,11 @@
-#transactions_table_screen {
-    width: 100%;
-    height: 100%; 
+TransactionsTableScreen{
+    layout: grid;
+    grid-size: 1;
+    grid-rows: auto 1fr;
 }
 
-#transaction_screen_selectors_bar {
-    height: auto;
-}
-
-#transactions_table {
-    width: auto;
-    height: auto;
+TabbedContent ContentSwitcher, DataTable{
+    height: 1fr;
 }
 
 TransactionDetailScreen {
@@ -18,7 +14,52 @@ TransactionDetailScreen {
     width: auto;
 }
 
-# #transaction_detail_markdown {
-#     width: auto;
-#     height: auto;
-# }
+TransactionDetailScreen Vertical{
+    height: auto;
+    width: auto;
+    border: double $secondary;
+    background: $primary-background;
+}
+Markdown{
+    background: $primary-background;
+}
+#tag_buttons {
+    layout: horizontal;
+    height: auto;
+}
+
+#tag_buttons Button{
+    width: auto;
+    min-width: 0;
+    height: auto;
+    margin: 1;
+    border: none;
+
+}
+
+
+TransactionTaggerScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+TransactionTaggerScreen VerticalScroll{
+    height: auto;
+    width: auto;
+    border: double $secondary;
+    background: $primary-background;
+}
+
+
+TransactionTaggerScreen Input {
+    width: 20;
+    background: black;
+
+}
+#tag_list {
+    width: 20;
+
+    
+}
+
