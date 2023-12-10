@@ -1,0 +1,28 @@
+TransactionTaggerScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+TransactionTaggerScreen VerticalScroll{
+    height: auto;
+    width: auto;
+    border: double $secondary;
+    border-title-align: center;
+    background: $primary-background;
+}
+
+Rule {
+    
+}
+
+TransactionTaggerScreen Input {
+    width: 20;
+    background: black;
+
+}
+#tag_list {
+    width: 20;
+
+    
+}

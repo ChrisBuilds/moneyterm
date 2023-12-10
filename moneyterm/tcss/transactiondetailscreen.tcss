@@ -1,0 +1,30 @@
+TransactionDetailScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+TransactionDetailScreen Vertical{
+    height: auto;
+    width: auto;
+    border: round $secondary;
+    border-title-align: center;
+    background: $primary-background;
+}
+
+Markdown{
+    background: $primary-background;
+}
+
+#tag_buttons {
+    layout: horizontal;
+    height: auto;
+}
+
+#tag_buttons Button{
+    width: auto;
+    min-width: 0;
+    height: auto;
+    margin: 1;
+    border: none;
+}

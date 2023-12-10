@@ -1,0 +1,9 @@
+TransactionsTableScreen{
+    layout: grid;
+    grid-size: 1;
+    grid-rows: auto 1fr;
+}
+
+TabbedContent ContentSwitcher, DataTable{
+    height: 1fr;
+}
