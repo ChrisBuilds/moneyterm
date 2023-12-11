@@ -1,17 +1,17 @@
 from textual.app import App, ComposeResult
 from moneyterm.utils.ledger import Ledger
 from moneyterm.utils.financedb import FinanceDB
-from moneyterm.screens.transactionstablescreen import TransactionsTableScreen
+from moneyterm.screens.transactionstablescreen import TabbedContentScreen
 
 
-class DashboardApp(App):
+class MoneyTerm(App):
     """Finance dashboard TUI."""
 
-    DB = FinanceDB()
-    LEDGER = Ledger(DB)
+    DB: FinanceDB = FinanceDB()
+    LEDGER: Ledger = Ledger(DB)
     CSS_PATH = "tcss/moneyterm.tcss"
     BINDINGS = []
-    SCREENS = {"transactions_table": TransactionsTableScreen(LEDGER)}
+    SCREENS = {"tabbedcontent": TabbedContentScreen(LEDGER)}
 
     def on_mount(self) -> None:
         """Mount the app."""
@@ -19,5 +19,5 @@ class DashboardApp(App):
 
 
 if __name__ == "__main__":
-    app = DashboardApp()
+    app = MoneyTerm()
     app.run()
