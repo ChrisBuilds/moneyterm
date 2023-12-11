@@ -1,19 +1,30 @@
 from textual import on, events
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import (
-    Header,
-    Footer,
-    DataTable,
-    TabbedContent,
-    TabPane,
-    Label,
-    Select,
-)
+from textual.widgets import Header, Footer, DataTable, TabbedContent, TabPane, Label, Select, Static
+from rich.table import Table
 from textual.containers import Horizontal
 from moneyterm.utils.ledger import Ledger
 from moneyterm.screens.tagselectorscreen import TransactionTaggerScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
+
+
+class TagsSummaryTable(Static):
+    def __init__(self, ledger: Ledger) -> None:
+        super().__init__()
+        self.ledger = ledger
+
+    def generate(self, account: str, year: int, month: int) -> None:
+        """Update the datatable when month selection changed."""
+        tags_table = Table(show_header=True)
+        for label in ["Tag", "Total"]:
+            tags_table.add_column(label)
+        transactions = self.ledger.get_tx_by_month(account, year, month)
+        for tag in self.ledger.get_all_tags():
+            transactions = self.ledger.get_tx_by_month(account, year, month)
+            total = sum([tx.amount for tx in transactions if tag in tx.tags])
+            tags_table.add_row(tag, str(total))
+        self.update(tags_table)
 
 
 class TransactionTable(DataTable):
@@ -77,8 +88,8 @@ class TransactionTable(DataTable):
         self.ledger.add_tag_to_tx(selected_transaction, tag)
 
 
-class TransactionsTableScreen(Screen):
-    CSS_PATH = "../tcss/transactionstablescreen.tcss"
+class TabbedContentScreen(Screen):
+    CSS_PATH = "../tcss/tabbedcontentscreen.tcss"
 
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
@@ -92,6 +103,7 @@ class TransactionsTableScreen(Screen):
         self.year_select: Select[str] = Select((("one", "one"), ("two", "two")), id="year_select", allow_blank=False)
         self.month_select: Select[str] = Select((("one", "one"), ("two", "two")), id="month_select", allow_blank=False)
         self.transactions_table: TransactionTable = TransactionTable(self.ledger)
+        self.tag_summary_table: TagsSummaryTable = TagsSummaryTable(self.ledger)
 
         yield Header()
         yield Footer()
@@ -104,7 +116,7 @@ class TransactionsTableScreen(Screen):
             yield self.month_select
         with TabbedContent(initial="transactions_tab", id="tabbed_content"):
             with TabPane("Overview", id="overview_tab"):
-                yield Label("Overview")
+                yield self.tag_summary_table
             with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
 
@@ -113,11 +125,10 @@ class TransactionsTableScreen(Screen):
 
         for label in ("Date", "PAYEE", "TYPE", "AMOUNT", "ACCOUNT", "CATEGORIES", "TAGS"):
             self.transactions_table.add_column(label, key=label)
-        account_select = self.query_one("#account_select", Select)
         account_select_options = [(account, account) for account in self.ledger.accounts]
-        account_select.set_options(account_select_options)
+        self.account_select.set_options(account_select_options)
         self.update_year_month_selects()
-        self.update_transactions_table()
+        self.update_all()
 
     @on(Select.Changed, "#account_select")
     def update_year_month_selects(self) -> None:
@@ -145,9 +156,14 @@ class TransactionsTableScreen(Screen):
                 self.month_select.value = currently_selected_month
 
     @on(Select.Changed)
-    def update_transactions_table(self) -> None:
-        """Update the datatable when month selection changed."""
+    def update_all(self) -> None:
+        """Update all relevant widgets when account/year/month selections are changed."""
         account_number = str(self.account_select.value)
         month = int(self.month_select.value)  # type: ignore
         year = int(self.year_select.value)  # type: ignore
         self.transactions_table.update_data(account_number, month, year)
+        self.tag_summary_table.generate(account_number, year, month)
+
+    def on_tabbed_content_tab_activated(self, tabbed_content: TabbedContent.TabActivated) -> None:
+        if tabbed_content.tab.id == "overview_tab":
+            self.update_all()
