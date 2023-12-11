@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from moneyterm.utils.ledger import Ledger
 from moneyterm.utils.financedb import FinanceDB
-from moneyterm.screens.transactionstablescreen import TabbedContentScreen
+from moneyterm.screens.tabbedcontentscreen import TabbedContentScreen
 
 
 class MoneyTerm(App):
@@ -15,7 +15,7 @@ class MoneyTerm(App):
 
     def on_mount(self) -> None:
         """Mount the app."""
-        self.push_screen("transactions_table")
+        self.push_screen("tabbedcontent")
 
 
 if __name__ == "__main__":
