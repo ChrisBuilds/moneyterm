@@ -25,7 +25,7 @@ from textual.widgets import (
 from textual.containers import Vertical, Horizontal, VerticalScroll
 from moneyterm.utils.ledger import Ledger, Transaction
 from moneyterm.utils.financedb import FinanceDB
-from moneyterm.screens.tagselectorscreen import TransactionTaggerScreen
+from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
 from pathlib import Path
 
 

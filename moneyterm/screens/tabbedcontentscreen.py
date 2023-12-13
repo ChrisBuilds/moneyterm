@@ -18,7 +18,7 @@ from textual.widgets import (
 from rich.table import Table
 from textual.containers import Horizontal, Grid
 from moneyterm.utils.ledger import Ledger
-from moneyterm.screens.tagselectorscreen import TransactionTaggerScreen
+from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 
 
@@ -81,7 +81,7 @@ class TransactionTable(DataTable):
         if key.key == "c":
             if self.selected_row_key:
                 selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-                self.app.push_screen(TransactionTaggerScreen(self.ledger, selected_transaction), get_selected_category)
+                self.app.push_screen(QuickCategoryScreen(self.ledger, selected_transaction), get_selected_category)
         elif key.key == "i":
             if self.selected_row_key:
                 transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
