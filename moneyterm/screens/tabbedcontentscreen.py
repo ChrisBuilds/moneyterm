@@ -1,9 +1,22 @@
 from textual import on, events
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Header, Footer, DataTable, TabbedContent, TabPane, Label, Select, Static
+from textual.widgets import (
+    Header,
+    Footer,
+    DataTable,
+    TabbedContent,
+    TabPane,
+    Label,
+    Select,
+    Static,
+    Button,
+    Input,
+    OptionList,
+    Rule,
+)
 from rich.table import Table
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Grid
 from moneyterm.utils.ledger import Ledger
 from moneyterm.screens.tagselectorscreen import TransactionTaggerScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
@@ -47,31 +60,32 @@ class TransactionTable(DataTable):
                 tx.amount,
                 tx.account_number,
                 ",".join(tx.categories),
-                ",".join(sorted(tx.tags)),
                 key=tx.txid,
             )
 
     def on_key(self, key: events.Key) -> None:
-        def update_row_tags(*args):
+        def update_row_categories(*args):
             if self.selected_row_key is None:
                 return
             self.update_cell(
-                self.selected_row_key, "TAGS", ",".join(sorted(self.ledger.get_tx_by_txid(self.selected_row_key).tags))
+                self.selected_row_key,
+                "CATEGORIES",
+                ",".join(sorted(self.ledger.get_tx_by_txid(self.selected_row_key).categories)),
             )
 
-        def get_selected_tag(tag: str):
-            if tag:
-                self.apply_tag_to_selected_transaction(tag)
-                update_row_tags()
+        def get_selected_category(category: str):
+            if category:
+                self.apply_category_to_selected_transaction(category)
+                update_row_categories()
 
-        if key.key == "t":
+        if key.key == "c":
             if self.selected_row_key:
                 selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-                self.app.push_screen(TransactionTaggerScreen(self.ledger, selected_transaction), get_selected_tag)
+                self.app.push_screen(TransactionTaggerScreen(self.ledger, selected_transaction), get_selected_category)
         elif key.key == "i":
             if self.selected_row_key:
                 transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-                self.app.push_screen(TransactionDetailScreen(self.ledger, transaction), update_row_tags)
+                self.app.push_screen(TransactionDetailScreen(self.ledger, transaction), update_row_categories)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self.selected_row_key = event.row_key.value
@@ -79,13 +93,13 @@ class TransactionTable(DataTable):
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         self.selected_row_key = event.row_key.value
 
-    def apply_tag_to_selected_transaction(self, tag: str) -> None:
-        """Apply a tag to the selected transaction."""
+    def apply_category_to_selected_transaction(self, category: str) -> None:
+        """Apply a category to the selected transaction."""
         if self.selected_row_key is None:
             return
-        self.log(f"Applying tag {tag} to transaction {self.ledger.get_tx_by_txid(self.selected_row_key)}")
+        self.log(f"Applying category {category} to transaction {self.ledger.get_tx_by_txid(self.selected_row_key)}")
         selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-        self.ledger.add_tag_to_tx(selected_transaction, tag)
+        self.ledger.add_category_to_tx(selected_transaction, category)
 
 
 class TabbedContentScreen(Screen):
@@ -119,11 +133,55 @@ class TabbedContentScreen(Screen):
                 yield self.tag_summary_table
             with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
+            with TabPane("Manage", id="manage_tab"):
+                with Horizontal(id="type_select"):
+                    yield Label("Type")
+                    yield Select([("Bill", "Bill"), ("Category", "Category")], allow_blank=True, id="type_select")
+                with Grid(id="manage_grid"):
+                    # row 1
+                    yield Label("Group")
+                    yield Select([], allow_blank=True, id="group_select")
+                    yield Button("Add New", id="add_new_button")
+                    # row 2
+                    yield Label("Match Fields", id="match_fields_label")
+                    yield Label("Matches", id="matches_label")
+                    # row 3
+                    yield Label("Start Date", id="start_date_label")
+                    yield Input(placeholder="mm/dd/yyyy", id="start_date_input", classes="match_field_input")
+                    yield OptionList(*(str(i) for i in range(20)), id="matches_option_list")
+                    # row 4
+                    yield Label("End Date", id="end_date_label")
+                    yield Input(placeholder="mm/dd/yyyy", id="end_date_input", classes="match_field_input")
+                    # row 5
+                    yield Label("Memo", id="memo_label")
+                    yield Input(placeholder="Memo", id="memo_input", classes="match_field_input")
+                    # row 6
+                    yield Label("Payee", id="payee_label")
+                    yield Input(placeholder="Payee", id="payee_input", classes="match_field_input")
+                    # row 7
+                    yield Label("Amount", id="amount_label")
+                    yield Input(placeholder="Amount", id="amount_input", classes="match_field_input")
+                    # row 8
+                    yield Label("Type", id="type_label")
+                    yield Input(placeholder="Type", id="type_input", classes="match_field_input")
+                    # row 9
+                    yield Rule(id="section_split_rule")
+                    # row 10
+                    yield Label("Match Label", id="match_label")
+                    yield Input(placeholder="Match Label", id="match_label_input")
+                    # row 11
+                    yield Label("Color", id="color_label")
+                    yield Input(placeholder="Color", id="color_input")
+                    # row 12
+                    yield Label("Alias", id="alias_label")
+                    yield Input(placeholder="Alias", id="alias_input")
+                    # row 13
+                    yield Button("Save", id="save_button")
 
     def on_mount(self) -> None:
         """Mount the widgets."""
 
-        for label in ("Date", "PAYEE", "TYPE", "AMOUNT", "ACCOUNT", "CATEGORIES", "TAGS"):
+        for label in ("Date", "PAYEE", "TYPE", "AMOUNT", "ACCOUNT", "CATEGORIES"):
             self.transactions_table.add_column(label, key=label)
         account_select_options = [(account, account) for account in self.ledger.accounts]
         self.account_select.set_options(account_select_options)
