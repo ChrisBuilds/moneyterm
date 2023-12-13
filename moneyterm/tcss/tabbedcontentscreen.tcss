@@ -1,9 +1,59 @@
 TabbedContentScreen{
     layout: grid;
-    grid-size: 1;
+    grid-size: 1 2;
     grid-rows: auto 1fr;
+
 }
 
 TabbedContent ContentSwitcher, DataTable{
     height: 1fr;
+}
+
+TabbedContentScreen #manage_grid{
+    grid-size: 4 13;
+    grid-rows: auto;
+    border: round $secondary;
+    border-title-align: center;
+    
+}
+
+TabbedContentScreen #type_select{
+    height: auto;
+}
+
+#add_new_button{
+    column-span: 2;
+    width: 8;
+}
+
+#match_fields_label {
+    column-span: 3;
+}
+
+#matches_label {
+    column-span: 2;
+}
+
+.match_field_input{
+    column-span: 2;
+}
+
+#matches_option_list{
+    row-span: 6;
+}
+
+#section_split_rule{
+    column-span: 4;
+}
+
+#match_label_input{
+    column-span: 3;
+}
+
+#color_input{
+    column-span: 3;
+}
+
+#alias_input{
+    column-span: 3;
 }
