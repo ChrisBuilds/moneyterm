@@ -17,8 +17,13 @@ TabbedContentScreen #manage_grid{
     
 }
 
-TabbedContentScreen #type_select{
+TabbedContentScreen #type_select_bar {
     height: auto;
+}
+
+TabbedContentScreen #manage_type_select{
+    height: auto;
+    width: 20;
 }
 
 #add_new_button{
