@@ -14,97 +14,63 @@ TabbedContentScreen Categorizer {
 }
 
 TabbedContentScreen #manage_grid{
-    grid-size: 7 13;
+    grid-size: 4 13;
     grid-rows: auto;
     border: round $secondary;
     border-title-align: center;
     
-}
-TabbedContentScreen #scope_select_bar {
-    height: auto;
-}
-
-
-TabbedContentScreen #manage_type_select{
-    height: auto;
-    width: 20;
 }
 
 TabbedContentScreen #type_select_bar {
     height: auto;
 }
 
-#group_select{
-    column-span: 2;
+TabbedContentScreen #scope_select_bar {
+    height: auto;
+}
+
+TabbedContentScreen #manage_type_select{
+    height: auto;
+    width: 20;
 }
 
 #create_new_group_button{
-    column-span: 2;
+    column-span: 1;
     width: 8;
 }
 
 #remove_group_button{
-    column-span: 2;
+    column-span: 1;
     width: 8;
 }
 
 #match_fields_label {
-    column-span: 5;
+    column-span: 3;
 }
 
 #matches_label {
     column-span: 2;
 }
 
-#start_date_label {
-    column-span: 1;
-    width: auto;
+.match_field_input{
+    column-span: 2;
 }
 
-#start_date_input {
-    column-span: 1;
-}
-
-#end_date_label {
-    column-span: 1;
-}
-
-#end_date_input {
-    column-span: 1;
-}
 #matches_option_list{
-    column-span: 3;
-    row-span: 3;
+    row-span: 5;
     height: 100%;
 }
-#memo_label {
-    
-}
-
-#memo_input {
-    column-span: 3;
-
-}
-#payee_input {
-    column-span: 3;
-}
-
-#remove_match_button {
-    column-span: 3;
-}
-
-
 
 #section_split_rule{
-    column-span: 7;
+    column-span: 4;
 }
 
 #match_label_input{
-    column-span: 1;
+    column-span: 3;
 }
 
 #color_input{
-    column-span: 1;
+    column-span: 3;
 }
 
 #alias_input{

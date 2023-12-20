@@ -290,6 +290,7 @@ class Categorizer(Widget):
             id="start_date_input",
             classes="match_field_input",
         )
+        self.matches_option_list = OptionList(*(str(i) for i in range(20)), id="matches_option_list")
         self.end_date_label = Label("End Date", id="end_date_label")
         self.end_date_input = Input(
             placeholder="mm/dd/yyyy",
@@ -302,7 +303,6 @@ class Categorizer(Widget):
             id="end_date_input",
             classes="match_field_input",
         )
-        self.matches_option_list = OptionList(*(str(i) for i in range(20)), id="matches_option_list")
         self.memo_label = Label("Memo", id="memo_label")
         self.memo_input = Input(placeholder="Memo", id="memo_input", classes="match_field_input")
         self.payee_label = Label("Payee", id="payee_label")
@@ -363,22 +363,22 @@ class Categorizer(Widget):
             # row 3
             yield self.start_date_label
             yield self.start_date_input
-            yield self.end_date_label
-            yield self.end_date_input
             yield self.matches_option_list
             # row 4
+            yield self.end_date_label
+            yield self.end_date_input
+            # row 5
             yield self.memo_label
             yield self.memo_input
-            # row 5
+            # row 6
             yield self.payee_label
             yield self.payee_input
-            # row 6
+            # row 7
             yield self.amount_label
             yield self.amount_input
+            # row 8
             yield self.type_label
             yield self.type_input
-            # row 7
-            # row 8
             yield self.remove_match_button
             # row 9
             yield self.section_split_rule
