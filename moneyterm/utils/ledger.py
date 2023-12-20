@@ -35,9 +35,8 @@ class Ledger:
         self.db = db
         self.accounts: dict[str, Account] = dict()
         self.transactions: dict[str, Transaction] = dict()
-        self.read_db()
+        self.load_db()
         self.message_log: list[str] = []
-        self.data_dates: defaultdict[int, set[tuple[int, str]]] = self.find_dates_with_tx_activity()
 
     def find_dates_with_tx_activity(self, account_number: str | None = None) -> defaultdict[int, set[tuple[int, str]]]:
         """
@@ -70,7 +69,7 @@ class Ledger:
         ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
-    def read_db(self) -> None:
+    def load_db(self) -> None:
         """Load database accounts, transactions, categories, and tags into the ledger."""
         accounts_rows = self.db.query_accounts()
         for account_row in accounts_rows:
@@ -86,7 +85,7 @@ class Ledger:
             return
         ofx_data = data_importer.load_ofx_data(data_file)
         self.db.import_ofx_data(ofx_data)
-        self.read_db()
+        self.load_db()
 
     @staticmethod
     def _make_tx_from_row(tx_row) -> Transaction:
