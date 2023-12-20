@@ -163,3 +163,5 @@ terminaltexteffects/test_tte.py
 .vscode/settings.json
 .vscode/launch.json
 *.sqlite
+moneyterm/data/groups.json
+moneyterm/config/conf.toml
