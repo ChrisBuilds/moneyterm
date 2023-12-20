@@ -1,4 +1,4 @@
-from textual.app import App, ComposeResult
+from textual.app import App
 from moneyterm.utils.ledger import Ledger
 from moneyterm.utils.financedb import FinanceDB
 from moneyterm.screens.tabbedcontentscreen import TabbedContentScreen
