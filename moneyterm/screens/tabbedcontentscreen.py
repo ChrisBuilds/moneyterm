@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import TypedDict
 from textual import on, events
 from textual.app import ComposeResult
 from textual.reactive import reactive
@@ -23,6 +24,7 @@ from textual.widgets import (
     Input,
     OptionList,
     Rule,
+    Checkbox,
 )
 from rich.table import Table
 from textual.containers import Horizontal, Grid, VerticalScroll
@@ -254,7 +256,20 @@ class ScopeSelectBar(Widget):
 
 
 # create type alias for match field input dict
-MatchFields = dict[str, str]
+class MatchFields(TypedDict):
+    start_date: str
+    end_date: str
+    memo: str
+    memo_exact: bool
+    payee: str
+    payee_exact: bool
+    amount: float
+    type: str
+    match_label: str
+    color: str
+    alias: str
+
+
 MatchGroup = dict[str, MatchFields]
 GroupType = dict[str, MatchGroup]
 
@@ -305,8 +320,10 @@ class Categorizer(Widget):
         )
         self.memo_label = Label("Memo", id="memo_label")
         self.memo_input = Input(placeholder="Memo", id="memo_input", classes="match_field_input")
+        self.memo_exact_match_checkbox = Checkbox("Exact", id="memo_exact_match_checkbox")
         self.payee_label = Label("Payee", id="payee_label")
         self.payee_input = Input(placeholder="Payee", id="payee_input", classes="match_field_input")
+        self.payee_exact_match_checkbox = Checkbox("Exact", id="payee_exact_match_checkbox")
         self.amount_label = Label("Amount", id="amount_label")
         self.amount_input = Input(
             placeholder="Ex: 53.49",
@@ -332,6 +349,8 @@ class Categorizer(Widget):
         self.alias_label = Label("Alias", id="alias_label")
         self.alias_input = Input(placeholder="Alias", id="alias_input")
         self.save_button = Button("Save", id="save_button")
+        self.preview_button = Button("Preview", id="preview_button")
+        self.preview_table: DataTable = DataTable(id="preview_table", zebra_stripes=True, cursor_type="row")
 
     def on_mount(self):
         # check for, and load, json data for groups
@@ -342,6 +361,8 @@ class Categorizer(Widget):
             self.groups = {"Bills": {}, "Categories": {}, "Incomes": {}}
             self.write_groups_json()
         self.update_group_select()
+
+        self.preview_table.add_columns("Date", "Payee", "Type", "Amount", "Account", "Categories")
 
     def write_groups_json(self):
         with open(Path("moneyterm/data/groups.json"), "w") as f:
@@ -355,8 +376,9 @@ class Categorizer(Widget):
             # row 1
             yield self.group_select_label
             yield self.group_select
-            yield self.create_new_group_button
-            yield self.remove_group_button
+            with Horizontal(id="group_create_remove_buttons"):
+                yield self.create_new_group_button
+                yield self.remove_group_button
             # row 2
             yield self.match_fields_label
             yield self.matches_label
@@ -369,10 +391,15 @@ class Categorizer(Widget):
             yield self.end_date_input
             # row 5
             yield self.memo_label
-            yield self.memo_input
+            with Horizontal(id="memo_field_bar"):
+                yield self.memo_input
+                yield self.memo_exact_match_checkbox
             # row 6
             yield self.payee_label
-            yield self.payee_input
+            with Horizontal(id="payee_field_bar"):
+                yield self.payee_input
+                yield self.payee_exact_match_checkbox
+
             # row 7
             yield self.amount_label
             yield self.amount_input
@@ -383,16 +410,20 @@ class Categorizer(Widget):
             # row 9
             yield self.section_split_rule
             # row 10
-            yield self.match_label
-            yield self.match_label_input
-            # row 11
-            yield self.color_label
-            yield self.color_input
-            # row 12
-            yield self.alias_label
-            yield self.alias_input
-            # row 13
-            yield self.save_button
+            with Horizontal(id="match_label_row"):
+                yield self.match_label
+                yield self.match_label_input
+                # row 11
+                yield self.color_label
+                yield self.color_input
+                # row 12
+                yield self.alias_label
+                yield self.alias_input
+                # row 13
+            with Horizontal(id="save_preview_buttons"):
+                yield self.save_button
+                yield self.preview_button
+            yield self.preview_table
 
     @on(Select.Changed, "#manage_type_select")
     def on_manage_type_select_change(self, event: Select.Changed) -> None:
@@ -427,12 +458,18 @@ class Categorizer(Widget):
             return
         if not self.validate_match_fields():
             return
+        if self.amount_input.value:
+            amount = float(self.amount_input.value)
+        else:
+            amount = 0.0
         self.groups[self.selected_type][self.selected_group][self.match_label_input.value] = {
             "start_date": self.start_date_input.value,
             "end_date": self.end_date_input.value,
             "memo": self.memo_input.value,
+            "memo_exact": self.memo_exact_match_checkbox.value,
             "payee": self.payee_input.value,
-            "amount": self.amount_input.value,
+            "payee_exact": self.payee_exact_match_checkbox.value,
+            "amount": amount,
             "type": self.type_input.value,
             "match_label": self.match_label_input.value,
             "color": self.color_input.value,
@@ -453,6 +490,33 @@ class Categorizer(Widget):
         self.groups[self.selected_type][self.selected_group].pop(self.selected_match_option.id)
         self.write_groups_json()
         self.update_match_options_list()
+
+    @on(Button.Pressed, "#preview_button")
+    def on_preview_button_press(self, event: Button.Pressed) -> None:
+        self.preview_table.clear()
+        if not self.validate_match_fields():
+            return
+        account_select: Select = self.app.query_one("#account_select", expect_type=Select)
+        year_select: Select = self.app.query_one("#year_select", expect_type=Select)
+        month_select: Select = self.app.query_one("#month_select", expect_type=Select)
+        if any(
+            isinstance(scope_select.value, NoSelection) for scope_select in (account_select, year_select, month_select)
+        ):
+            self.notify("Account, year, and month must be selected!", title="Error", severity="error", timeout=7)
+            return
+        transactions = self.ledger.get_tx_by_month(
+            str(account_select.value), int(year_select.value), int(month_select.value)  # type: ignore
+        )
+        for tx in transactions:
+            if self.payee_input.value and self.payee_input.value in tx.payee:
+                self.preview_table.add_row(
+                    tx.date.strftime("%Y-%m-%d"),
+                    tx.payee,
+                    tx.tx_type,
+                    tx.amount,
+                    tx.account_number,
+                    ",".join(tx.categories),
+                )
 
     def validate_date(self, date_str: str) -> bool:
         try:
@@ -569,7 +633,9 @@ class Categorizer(Widget):
             self.start_date_input.clear()
             self.end_date_input.clear()
             self.memo_input.clear()
+            self.memo_exact_match_checkbox.value = False
             self.payee_input.clear()
+            self.payee_exact_match_checkbox.value = False
             self.amount_input.clear()
             self.type_input.clear()
             self.match_label_input.clear()
@@ -581,8 +647,10 @@ class Categorizer(Widget):
         self.start_date_input.value = match["start_date"]
         self.end_date_input.value = match["end_date"]
         self.memo_input.value = match["memo"]
+        self.memo_exact_match_checkbox.value = match["memo_exact"]
         self.payee_input.value = match["payee"]
-        self.amount_input.value = match["amount"]
+        self.payee_exact_match_checkbox.value = match["payee_exact"]
+        self.amount_input.value = str(match["amount"])
         self.type_input.value = match["type"]
         self.match_label_input.value = match["match_label"]
         self.color_input.value = match["color"]
