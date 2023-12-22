@@ -4,17 +4,29 @@ AddGroupScreen {
     width: auto;
 }
 
+AddGroupScreen Vertical {
+    height: auto;
+    width: auto;
+    border: round $secondary;
+    border-title-align: center;
+}
 AddGroupScreen Horizontal {
     height: auto;
     width: auto;
 }
 
-AddGroupScreen Vertical {
-    height: auto;
-    width: auto;
+AddGroupScreen #new_group_name_label {
+    text-align: right;
+    content-align-vertical: middle;
+    height: 3;
 }
 
 AddGroupScreen #new_group_name_input {
     height: auto;
     width: 30;
+}
+
+AddGroupScreen #add_group_button {
+    width: 100%;
+    margin-top: 1;
 }
