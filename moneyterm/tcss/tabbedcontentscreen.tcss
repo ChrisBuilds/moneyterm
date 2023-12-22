@@ -34,16 +34,19 @@ TabbedContentScreen #manage_type_select{
     width: 20;
 }
 
+#group_create_remove_buttons{
+    column-span: 2;
+    width: 40;
+}
 #create_new_group_button{
-    column-span: 1;
-    width: 8;
+    width: 40%;
+    margin-left: 2;
 }
 
 #remove_group_button{
-    column-span: 1;
-    width: 8;
+    width:40%;
+    margin-left: 2;
 }
-
 #match_fields_label {
     column-span: 3;
 }
@@ -56,6 +59,32 @@ TabbedContentScreen #manage_type_select{
     column-span: 2;
 }
 
+#memo_field_bar {
+    column-span: 2;
+    width: 100%;
+    
+}
+
+#memo_input{
+    width: 34;
+}
+#memo_exact_match_checkbox {
+    width: auto;
+}
+
+#payee_field_bar {
+    column-span: 2;
+    width: 100%;
+}
+
+#payee_input{
+    width: 34;
+}
+#payee_exact_match_checkbox {
+    width: auto;
+}
+
+
 #matches_option_list{
     row-span: 5;
     height: 100%;
@@ -64,19 +93,46 @@ TabbedContentScreen #manage_type_select{
 #section_split_rule{
     column-span: 4;
 }
+#match_label_row {
+    column-span: 4;
 
+}
+#match_label {
+    width: auto;
+}
 #match_label_input{
-    column-span: 3;
+    width: 20;
 }
+#color_label {
+    width: auto;
 
+}
 #color_input{
-    column-span: 3;
+    width: 20;
 }
+#alias_label {
+    width: auto;
 
+}
 #alias_input{
-    column-span: 3;
+    width: 20;
 }
 
-#manage_vertical_scroll{
-    height: auto;
+#save_preview_buttons{
+    column-span: 4;
+}
+
+#save_button{
+    width: 20%;
+}
+
+#preview_button{
+    width: 20%;
+    margin-left: 2;
+}
+
+#preview_table{
+    column-span: 4;
+    height: 8;
+    border: round $secondary;
 }
