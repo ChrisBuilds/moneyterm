@@ -35,11 +35,12 @@ class AddGroupScreen(ModalScreen):
         super().__init__()
         self.existing_groups = existing_groups
         self.new_group_input = Input(id="new_group_name_input", placeholder="New Group Name")
+        self.container_vertical = Vertical(id="add_group_vertical")
+        self.container_vertical.border_title = "Add Group"
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="add_group_vertical"):
+        with self.container_vertical:
             with Horizontal(id="add_group_horizontal"):
-                yield Label("New Group Name")
                 yield self.new_group_input
             yield Button("Add Group", id="add_group_button")
 
