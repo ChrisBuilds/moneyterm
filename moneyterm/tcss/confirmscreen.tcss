@@ -1,0 +1,30 @@
+ConfirmScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+ConfirmScreen #screen_vertical {
+    align: center middle;
+    height: auto;
+    width: auto;
+    border: round $secondary;
+    border-title-align: left;
+}
+
+ConfirmScreen #confirm_label {
+    width: 35;
+    text-align: center;
+}
+
+ConfirmScreen #confirm_buttons_horizontal {
+    align: center middle;
+    height: auto;
+    width: auto;
+    margin: 1;
+}
+
+ConfirmScreen Button {
+    width: auto;
+    margin: 0 1 0 1;
+}
