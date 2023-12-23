@@ -1,26 +1,11 @@
 from textual import log, on, events
-from textual.message import Message
-from textual.app import App, ComposeResult
-from textual.screen import Screen, ModalScreen
+from textual.app import ComposeResult
+from textual.screen import ModalScreen
 from textual.widgets import (
-    Header,
-    Footer,
-    DataTable,
-    TabbedContent,
-    Placeholder,
-    TabPane,
-    Static,
     Button,
-    ListItem,
-    ListView,
-    Label,
-    Select,
-    Rule,
-    OptionList,
     Input,
-    Markdown,
 )
-from textual.containers import Vertical, Horizontal, VerticalScroll, Middle
+from textual.containers import Vertical, Horizontal
 
 
 class AddGroupScreen(ModalScreen):
