@@ -19,8 +19,10 @@ from textual.widgets import (
     Checkbox,
 )
 from textual.containers import Horizontal, Grid
-from moneyterm.utils.ledger import Ledger
+from moneyterm.utils.ledger import Ledger, Transaction
 from moneyterm.screens.addgroupscreen import AddGroupScreen
+from moneyterm.screens.confirmscreen import ConfirmScreen
+from moneyterm.widgets.transactiontable import TransactionTable
 from datetime import datetime
 
 
@@ -69,7 +71,7 @@ class Categorizer(Widget):
         self.start_date_input = Input(
             placeholder="mm/dd/yyyy",
             restrict=r"[0-9\/]*",
-            validators=[Function(self.validate_date, "Date must be in the format mm/dd/yyyy.")],
+            validators=[Function(self.validate_date_format, "Date must be in the format mm/dd/yyyy.")],
             valid_empty=True,
             id="start_date_input",
             classes="match_field_input",
@@ -80,7 +82,7 @@ class Categorizer(Widget):
             placeholder="mm/dd/yyyy",
             restrict=r"[0-9\/]*",
             validators=[
-                Function(self.validate_date, "Date must be in the format mm/dd/yyyy."),
+                Function(self.validate_date_format, "Date must be in the format mm/dd/yyyy."),
                 Function(self.validate_end_date_after_start_date, "End date must be after start date."),
             ],
             valid_empty=True,
@@ -96,7 +98,7 @@ class Categorizer(Widget):
         self.amount_label = Label("Amount", id="amount_label")
         self.amount_input = Input(
             placeholder="Ex: 53.49",
-            restrict=r"[0-9\.]*",
+            restrict=r"[0-9\.\-]*",
             validators=[
                 Function(
                     self.validate_amount_is_float_up_to_two_decimal_places,
@@ -118,23 +120,27 @@ class Categorizer(Widget):
         self.alias_label = Label("Alias", id="alias_label")
         self.alias_input = Input(placeholder="Alias", id="alias_input")
         self.save_button = Button("Save", id="save_button")
-        self.preview_button = Button("Preview", id="preview_button")
-        self.preview_table: DataTable = DataTable(id="preview_table", zebra_stripes=True, cursor_type="row")
+        self.save_button.disabled = True
+        self.preview_button = Button("Show Matches", id="preview_button")
+        self.show_all_tx_checkbox = Checkbox("Show All Transactions", id="show_all_tx_checkbox")
+        # self.preview_table: DataTable = DataTable(id="preview_table", zebra_stripes=True, cursor_type="row")
+        self.preview_table: TransactionTable = TransactionTable(self.ledger)
+        self.preview_table.border_title = "Transactions Preview Results"
 
     def on_mount(self):
         # check for, and load, json data for groups
         try:
-            with open(Path("moneyterm/data/groups.json"), "r") as f:
+            with open(Path("moneyterm/data/identifiers.json"), "r") as f:
                 self.groups = json.load(f)
         except FileNotFoundError:
             self.groups = {"Bills": {}, "Categories": {}, "Incomes": {}}
             self.write_groups_json()
         self.update_group_select()
 
-        self.preview_table.add_columns("Date", "Payee", "Type", "Amount", "Account", "Categories")
+        # self.preview_table.add_columns("Date", "Payee", "Type", "Amount", "Account", "Categories")
 
     def write_groups_json(self):
-        with open(Path("moneyterm/data/groups.json"), "w") as f:
+        with open(Path("moneyterm/data/identifiers.json"), "w") as f:
             json.dump(self.groups, f, indent=4)
 
     def compose(self) -> ComposeResult:
@@ -192,6 +198,8 @@ class Categorizer(Widget):
             with Horizontal(id="save_preview_buttons"):
                 yield self.save_button
                 yield self.preview_button
+                yield self.show_all_tx_checkbox
+        with Horizontal(id="preview_table_horizontal"):
             yield self.preview_table
 
     @on(Select.Changed, "#manage_type_select")
@@ -217,9 +225,17 @@ class Categorizer(Widget):
     def on_remove_group_button_press(self, event: Button.Pressed) -> None:
         if isinstance(self.selected_group, NoSelection):
             return
-        self.groups[self.selected_type].pop(self.selected_group)
-        self.write_groups_json()
-        self.update_group_select()
+        match_count = len(self.groups[self.selected_type][self.selected_group])
+        message = f"Are you sure you want to remove group '{self.selected_group}' and its {match_count} matches?"
+        self.app.push_screen(ConfirmScreen(message), self.remove_selected_group)
+
+    def remove_selected_group(self, confirm: bool) -> None:
+        if isinstance(self.selected_group, NoSelection):
+            return
+        if confirm:
+            self.groups[self.selected_type].pop(self.selected_group)
+            self.write_groups_json()
+            self.update_group_select()
 
     @on(Button.Pressed, "#save_button")
     def on_save_button_press(self, event: Button.Pressed) -> None:
@@ -256,15 +272,23 @@ class Categorizer(Widget):
             or isinstance(self.selected_group, NoSelection)
         ):
             return
-        self.groups[self.selected_type][self.selected_group].pop(self.selected_match_option.id)
-        self.write_groups_json()
-        self.update_match_options_list()
+        message = f"Are you sure you want to remove match '{self.selected_match_option.id}'? Transactions with this match will no longer be categorized."
+        self.app.push_screen(ConfirmScreen(message), self.remove_selected_match)
+
+    def remove_selected_match(self, confirm: bool) -> None:
+        if (
+            self.selected_match_option is None
+            or self.selected_match_option.id is None
+            or isinstance(self.selected_group, NoSelection)
+        ):
+            return
+        if confirm:
+            self.groups[self.selected_type][self.selected_group].pop(self.selected_match_option.id)
+            self.write_groups_json()
+            self.update_match_options_list()
 
     @on(Button.Pressed, "#preview_button")
     def on_preview_button_press(self, event: Button.Pressed) -> None:
-        self.preview_table.clear()
-        if not self.validate_match_fields():
-            return
         account_select: Select = self.app.query_one("#account_select", expect_type=Select)
         year_select: Select = self.app.query_one("#year_select", expect_type=Select)
         month_select: Select = self.app.query_one("#month_select", expect_type=Select)
@@ -276,18 +300,44 @@ class Categorizer(Widget):
         transactions = self.ledger.get_tx_by_month(
             str(account_select.value), int(year_select.value), int(month_select.value)  # type: ignore
         )
+        self.preview_table.clear()
+        if not self.validate_match_fields():
+            return
+        match_fields = self.get_match_fields()
         for tx in transactions:
-            if self.payee_input.value and self.payee_input.value in tx.payee:
-                self.preview_table.add_row(
-                    tx.date.strftime("%Y-%m-%d"),
-                    tx.payee,
-                    tx.tx_type,
-                    tx.amount,
-                    tx.account_number,
-                    ",".join(tx.categories),
-                )
+            if self.check_transaction_match(tx, match_fields):
+                self.preview_table.add_transaction_row(tx, payee_alias=match_fields["alias"])
+            else:
+                if self.show_all_tx_checkbox.value:
+                    self.preview_table.add_transaction_row(tx)
 
-    def validate_date(self, date_str: str) -> bool:
+    def on_transaction_table_row_sent(self, message: TransactionTable.RowSent) -> None:
+        transaction = self.ledger.get_tx_by_txid(message.tx_id)
+        self.start_date_input.value = transaction.date.strftime("%m/%d/%Y")
+        self.end_date_input.value = transaction.date.strftime("%m/%d/%Y")
+        self.memo_input.value = transaction.memo
+        self.memo_exact_match_checkbox.value = False
+        self.payee_input.value = transaction.payee
+        self.payee_exact_match_checkbox.value = False
+        self.amount_input.value = str(transaction.amount)
+        self.type_input.value = transaction.tx_type
+
+    def get_match_fields(self) -> MatchFields:
+        return {
+            "start_date": self.start_date_input.value,
+            "end_date": self.end_date_input.value,
+            "memo": self.memo_input.value,
+            "memo_exact": self.memo_exact_match_checkbox.value,
+            "payee": self.payee_input.value,
+            "payee_exact": self.payee_exact_match_checkbox.value,
+            "amount": float(self.amount_input.value) if self.amount_input.value else 0.0,
+            "type": self.type_input.value,
+            "match_label": self.match_label_input.value,
+            "color": self.color_input.value,
+            "alias": self.alias_input.value,
+        }
+
+    def validate_date_format(self, date_str: str) -> bool:
         try:
             datetime.strptime(date_str, "%m/%d/%Y")
             return True
@@ -347,7 +397,10 @@ class Categorizer(Widget):
             validated = False
         return validated
 
-    def create_new_group(self, new_group_name) -> None:
+    def create_new_group(self, new_group_name: str) -> None:
+        if self.selected_type == "Categories":
+            self.log("Adding new category to ledger.")
+            self.ledger.add_category(new_group_name)
         self.groups[self.selected_type][new_group_name] = {}
         self.write_groups_json()
         self.update_group_select(set_selection=new_group_name)
@@ -393,8 +446,10 @@ class Categorizer(Widget):
         self.update_match_options_list()
         if isinstance(self.selected_group, NoSelection):
             self.remove_group_button.disabled = True
+            self.save_button.disabled = True
         else:
             self.remove_group_button.disabled = False
+            self.save_button.disabled = False
 
     def watch_selected_match_option(self) -> None:
         if self.selected_match_option is None or isinstance(self.selected_group, NoSelection):
@@ -410,6 +465,7 @@ class Categorizer(Widget):
             self.match_label_input.clear()
             self.color_input.clear()
             self.alias_input.clear()
+            self.preview_table.update_data()
             return
         self.remove_match_button.disabled = False
         match = self.groups[self.selected_type][self.selected_group][str(self.selected_match_option.id)]
@@ -424,3 +480,49 @@ class Categorizer(Widget):
         self.match_label_input.value = match["match_label"]
         self.color_input.value = match["color"]
         self.alias_input.value = match["alias"]
+
+    def check_transaction_match(self, transaction: Transaction, match_fields: MatchFields) -> bool:
+        """Check if a transaction matches the match fields.
+
+        Args:
+            transaction (Transaction): Transaction object
+            match_fields (MatchFields): Match fields dict
+
+        Returns:
+            bool: True if the transaction matches the match fields, False otherwise
+        """
+        # check start date
+        if match_fields["start_date"]:
+            start_date_obj = datetime.strptime(match_fields["start_date"], "%m/%d/%Y")
+            if transaction.date < start_date_obj:
+                return False
+        # check end date
+        if match_fields["end_date"]:
+            end_date_obj = datetime.strptime(match_fields["end_date"], "%m/%d/%Y")
+            if transaction.date > end_date_obj:
+                return False
+        # check memo
+        if match_fields["memo"]:
+            if match_fields["memo_exact"]:
+                if match_fields["memo"] != transaction.memo:
+                    return False
+            else:
+                if match_fields["memo"] not in transaction.memo:
+                    return False
+        # check payee
+        if match_fields["payee"]:
+            if match_fields["payee_exact"]:
+                if match_fields["payee"] != transaction.payee:
+                    return False
+            else:
+                if match_fields["payee"] not in transaction.payee:
+                    return False
+        # check amount
+        if match_fields["amount"]:
+            if match_fields["amount"] != transaction.amount:
+                return False
+        # check type
+        if match_fields["type"]:
+            if match_fields["type"] != transaction.tx_type:
+                return False
+        return True
