@@ -84,7 +84,10 @@ TabbedContentScreen #manage_type_select{
     width: auto;
 }
 
-
+#matches_label {
+    width: 100%;
+    text-align: center;
+}
 #matches_option_list{
     row-span: 5;
     height: 100%;
@@ -120,6 +123,9 @@ TabbedContentScreen #manage_type_select{
 
 #save_preview_buttons{
     column-span: 4;
+    padding-top: 1;
+    
+
 }
 
 #save_button{
@@ -131,8 +137,14 @@ TabbedContentScreen #manage_type_select{
     margin-left: 2;
 }
 
-#preview_table{
-    column-span: 4;
-    height: 8;
+#preview_table_horizontal {
+    height: 12;
+}
+
+Categorizer #transactions_table {
+    height: 100%;
+    width: 100%;
     border: round $secondary;
+    border-title-align: left;
+
 }
