@@ -60,7 +60,7 @@ class FinanceDB:
 
     def _execute_read_query(self, query) -> list:
         cursor = self.connection.cursor()
-        result = None
+        result = []
         try:
             cursor.execute(query)
             result = cursor.fetchall()
@@ -225,7 +225,7 @@ class FinanceDB:
         self._execute_query(update_statement)
 
     def add_category_to_tx(self, transaction_id: str, category_str: str) -> None:
-        """Add tag to transaction if transaction has available tag slot and tag not already present."""
+        """Add category to transaction if transaction has available category slot and category not already present."""
         tx = self.query_transactions(transaction_id)[0]
         current_categories = tx[8:13]
         if category_str in current_categories:
@@ -326,6 +326,14 @@ class FinanceDB:
                 if not self.query_transactions(tx.id):
                     self.insert_tx(account.number, tx)
                     transactions_added += 1
+
+    def query_transactions_with_category(self, category: str) -> list[TRANSACTION_ROW]:
+        """Query database for transactions with a given category."""
+        query = f"""
+        SELECT * FROM transactions WHERE category0 = '{category}' OR category1 = '{category}' OR category2 = '{category}' OR category3 = '{category}' OR category4 = '{category}';
+        """
+        transactions = self._execute_read_query(query)
+        return transactions
 
 
 if __name__ == "__main__":
