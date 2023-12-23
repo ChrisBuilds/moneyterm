@@ -165,3 +165,4 @@ terminaltexteffects/test_tte.py
 *.sqlite
 moneyterm/data/groups.json
 moneyterm/config/conf.toml
+moneyterm/data/identifiers.json
