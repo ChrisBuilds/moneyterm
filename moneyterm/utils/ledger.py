@@ -177,3 +177,11 @@ class Ledger:
     def remove_cateogry_from_tx(self, transaction: Transaction, category_str: str) -> None:
         self.db.remove_category_from_tx(transaction.txid, category_str)
         self._update_tx_from_db(transaction.txid)
+
+    def get_all_tx_with_category(self, category: str) -> list[Transaction]:
+        tx_rows = self.db.query_transactions_with_category(category)
+        if tx_rows:
+            tx_list = [self._make_tx_from_row(tx_row) for tx_row in tx_rows]
+        else:
+            return []
+        return tx_list
