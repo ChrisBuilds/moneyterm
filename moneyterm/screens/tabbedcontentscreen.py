@@ -82,6 +82,8 @@ class TabbedContentScreen(Screen):
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """Update the tag summary table and transaction table when scope selection changed."""
         self.log(f"Scope changed: {message.account}, {message.year}, {message.month}")
-        self.transactions_table.account = message.account
-        self.transactions_table.year = message.year
-        self.transactions_table.month = message.month
+        for transaction_table in self.query("TransactionTable"):
+            if isinstance(transaction_table, TransactionTable):
+                transaction_table.account = message.account
+                transaction_table.year = message.year
+                transaction_table.month = message.month
