@@ -124,7 +124,6 @@ TabbedContentScreen #manage_type_select{
 #save_preview_buttons{
     column-span: 4;
     padding-top: 1;
-    
 
 }
 
@@ -135,6 +134,10 @@ TabbedContentScreen #manage_type_select{
 #preview_button{
     width: 20%;
     margin-left: 2;
+}
+
+Button:focus {
+    text-style: bold;
 }
 
 #preview_table_horizontal {

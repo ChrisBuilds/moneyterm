@@ -1,4 +1,4 @@
-import ofxparse
+import ofxparse  # type: ignore
 from pathlib import Path
 
 

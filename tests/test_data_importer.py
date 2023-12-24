@@ -9,7 +9,7 @@ def test_load_ofx_data_no_file(di):
 
 
 def test_load_ofx_data(di):
-    ofx_file = Path("tests") / Path("test_data/test1.QFX")
+    ofx_file = Path("tests/test_data/test1.QFX")
     ofx_data = di(ofx_file)
     assert isinstance(ofx_data, ofxparse.Ofx)
     assert len(ofx_data.accounts) == 1

@@ -9,7 +9,6 @@ from textual.types import NoSelection
 from textual.validation import Function
 from textual.widgets.option_list import Option
 from textual.widgets import (
-    DataTable,
     Label,
     Select,
     Button,
@@ -24,6 +23,7 @@ from moneyterm.screens.addgroupscreen import AddGroupScreen
 from moneyterm.screens.confirmscreen import ConfirmScreen
 from moneyterm.widgets.transactiontable import TransactionTable
 from datetime import datetime
+from decimal import Decimal
 
 
 # create type alias for match field input dict
@@ -34,7 +34,7 @@ class MatchFields(TypedDict):
     memo_exact: bool
     payee: str
     payee_exact: bool
-    amount: float
+    amount: str
     type: str
     match_label: str
     color: str
@@ -101,8 +101,8 @@ class Categorizer(Widget):
             restrict=r"[0-9\.\-]*",
             validators=[
                 Function(
-                    self.validate_amount_is_float_up_to_two_decimal_places,
-                    "Amount must be number/decimal up to two places. Ex: 3, 3.01",
+                    self.validate_amount_is_decimal,
+                    "Amount must be number/decimal. Ex: 3, 3.01",
                 )
             ],
             valid_empty=True,
@@ -123,7 +123,7 @@ class Categorizer(Widget):
         self.save_button.disabled = True
         self.preview_button = Button("Show Matches", id="preview_button")
         self.show_all_tx_checkbox = Checkbox("Show All Transactions", id="show_all_tx_checkbox")
-        # self.preview_table: DataTable = DataTable(id="preview_table", zebra_stripes=True, cursor_type="row")
+        self.scan_and_update_button = Button("Scan and Update", id="scan_and_update_button")
         self.preview_table: TransactionTable = TransactionTable(self.ledger)
         self.preview_table.border_title = "Transactions Preview Results"
 
@@ -199,6 +199,7 @@ class Categorizer(Widget):
                 yield self.save_button
                 yield self.preview_button
                 yield self.show_all_tx_checkbox
+                yield self.scan_and_update_button
         with Horizontal(id="preview_table_horizontal"):
             yield self.preview_table
 
@@ -243,10 +244,6 @@ class Categorizer(Widget):
             return
         if not self.validate_match_fields():
             return
-        if self.amount_input.value:
-            amount = float(self.amount_input.value)
-        else:
-            amount = 0.0
         self.groups[self.selected_type][self.selected_group][self.match_label_input.value] = {
             "start_date": self.start_date_input.value,
             "end_date": self.end_date_input.value,
@@ -254,7 +251,7 @@ class Categorizer(Widget):
             "memo_exact": self.memo_exact_match_checkbox.value,
             "payee": self.payee_input.value,
             "payee_exact": self.payee_exact_match_checkbox.value,
-            "amount": amount,
+            "amount": self.amount_input.value,
             "type": self.type_input.value,
             "match_label": self.match_label_input.value,
             "color": self.color_input.value,
@@ -311,6 +308,13 @@ class Categorizer(Widget):
                 if self.show_all_tx_checkbox.value:
                     self.preview_table.add_transaction_row(tx)
 
+    @on(Button.Pressed, "#scan_and_update_button")
+    def on_scan_and_update_button_press(self, event: Button.Pressed) -> None:
+        for category in self.groups["Categories"]:
+            for match in self.groups["Categories"][category]:
+                match_fields = self.groups["Categories"][category][match]
+                self.log(f"Checking for category: {category}, match: {match}")
+
     def on_transaction_table_row_sent(self, message: TransactionTable.RowSent) -> None:
         transaction = self.ledger.get_tx_by_txid(message.tx_id)
         self.start_date_input.value = transaction.date.strftime("%m/%d/%Y")
@@ -330,7 +334,7 @@ class Categorizer(Widget):
             "memo_exact": self.memo_exact_match_checkbox.value,
             "payee": self.payee_input.value,
             "payee_exact": self.payee_exact_match_checkbox.value,
-            "amount": float(self.amount_input.value) if self.amount_input.value else 0.0,
+            "amount": self.amount_input.value,
             "type": self.type_input.value,
             "match_label": self.match_label_input.value,
             "color": self.color_input.value,
@@ -354,11 +358,9 @@ class Categorizer(Widget):
         except:
             return False
 
-    def validate_amount_is_float_up_to_two_decimal_places(self, amount: str) -> bool:
+    def validate_amount_is_decimal(self, amount: str) -> bool:
         try:
-            float(amount)
-            if "." in amount:
-                return len(amount.split(".")[1]) <= 2
+            Decimal(amount)
             return True
         except:
             return False
@@ -398,9 +400,6 @@ class Categorizer(Widget):
         return validated
 
     def create_new_group(self, new_group_name: str) -> None:
-        if self.selected_type == "Categories":
-            self.log("Adding new category to ledger.")
-            self.ledger.add_category(new_group_name)
         self.groups[self.selected_type][new_group_name] = {}
         self.write_groups_json()
         self.update_group_select(set_selection=new_group_name)
@@ -519,7 +518,7 @@ class Categorizer(Widget):
                     return False
         # check amount
         if match_fields["amount"]:
-            if match_fields["amount"] != transaction.amount:
+            if Decimal(match_fields["amount"]) != transaction.amount:
                 return False
         # check type
         if match_fields["type"]:

@@ -38,24 +38,6 @@ from moneyterm.widgets.categorizer import Categorizer
 from datetime import datetime
 
 
-class TagsSummaryTable(Static):
-    def __init__(self, ledger: Ledger) -> None:
-        super().__init__()
-        self.ledger = ledger
-
-    def generate(self, account: str, year: int, month: int) -> None:
-        """Update the datatable when month selection changed."""
-        tags_table = Table(show_header=True)
-        for label in ["Tag", "Total"]:
-            tags_table.add_column(label)
-        transactions = self.ledger.get_tx_by_month(account, year, month)
-        for tag in self.ledger.get_all_tags():
-            transactions = self.ledger.get_tx_by_month(account, year, month)
-            total = sum([tx.amount for tx in transactions if tag in tx.tags])
-            tags_table.add_row(tag, str(total))
-        self.update(tags_table)
-
-
 class TabbedContentScreen(Screen):
     CSS_PATH = "../tcss/tabbedcontentscreen.tcss"
 
@@ -66,7 +48,6 @@ class TabbedContentScreen(Screen):
     def compose(self) -> ComposeResult:
         """Compose the widgets."""
         self.transactions_table: TransactionTable = TransactionTable(self.ledger)
-        self.tag_summary_table: TagsSummaryTable = TagsSummaryTable(self.ledger)
 
         yield Header()
         yield Footer()

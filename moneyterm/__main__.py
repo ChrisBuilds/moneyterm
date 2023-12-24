@@ -1,17 +1,23 @@
 from textual.app import App
 from moneyterm.utils.ledger import Ledger
-from moneyterm.utils.financedb import FinanceDB
+from pathlib import Path
+import pickle
 from moneyterm.screens.tabbedcontentscreen import TabbedContentScreen
 
 
 class MoneyTerm(App):
     """Finance dashboard TUI."""
 
-    DB: FinanceDB = FinanceDB()
-    LEDGER: Ledger = Ledger(DB)
+    LEDGER: Ledger = Ledger()
     CSS_PATH = "tcss/moneyterm.tcss"
     BINDINGS = []
     SCREENS = {"tabbedcontent": TabbedContentScreen(LEDGER)}
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.LEDGER.read_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
+        # self.LEDGER.load_ofx_data(Path("transactions.QFX"))
+        # self.LEDGER.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
 
     def on_mount(self) -> None:
         """Mount the app."""
