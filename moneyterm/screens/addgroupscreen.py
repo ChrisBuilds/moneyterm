@@ -8,41 +8,41 @@ from textual.widgets import (
 from textual.containers import Vertical, Horizontal
 
 
-class AddGroupScreen(ModalScreen):
-    CSS_PATH = "../tcss/addgroupscreen.tcss"
+class AddLabelScreen(ModalScreen):
+    CSS_PATH = "../tcss/addlabelscreen.tcss"
 
-    def __init__(self, existing_groups: list[str]) -> None:
+    def __init__(self, existing_labels: list[str]) -> None:
         """Initialize the screen.
 
         Args:
-            existing_groups (list[str]): List of existing groups
+            existing_labels (list[str]): List of existing labels
         """
         super().__init__()
-        self.existing_groups = existing_groups
-        self.new_group_input = Input(id="new_group_name_input", placeholder="New Group Name")
-        self.container_vertical = Vertical(id="add_group_vertical")
-        self.container_vertical.border_title = "Add Group"
+        self.existing_labels = existing_labels
+        self.new_label_input = Input(id="new_label_name_input", placeholder="New Label Name")
+        self.container_vertical = Vertical(id="add_label_vertical")
+        self.container_vertical.border_title = "Add Label"
 
     def compose(self) -> ComposeResult:
         with self.container_vertical:
-            with Horizontal(id="add_group_horizontal"):
-                yield self.new_group_input
-            yield Button("Add Group", id="add_group_button")
+            with Horizontal(id="add_label_horizontal"):
+                yield self.new_label_input
+            yield Button("Add Label", id="add_label_button")
 
     def on_key(self, key: events.Key) -> None:
         """Handle key presses."""
         if key.key == "escape":
             self.app.pop_screen()
         elif key.key == "enter":
-            self.add_group_button()
+            self.add_label_button()
 
-    @on(Button.Pressed, "#add_group_button")
-    def add_group_button(self) -> None:
-        """Add a new group to the list of existing groups."""
-        new_group_name = self.new_group_input.value
-        if new_group_name in self.existing_groups:
-            self.notify("Group already exists!", title="Error", severity="error")
-        elif not new_group_name:
-            self.notify("Group name cannot be empty!", title="Error", severity="error")
+    @on(Button.Pressed, "#add_label_button")
+    def add_label_button(self) -> None:
+        """Add a new label to the list of existing labels."""
+        new_label_name = self.new_label_input.value
+        if new_label_name in self.existing_labels:
+            self.notify("Label already exists!", title="Error", severity="error")
+        elif not new_label_name:
+            self.notify("Label name cannot be empty!", title="Error", severity="error")
         else:
-            self.dismiss(new_group_name)
+            self.dismiss(new_label_name)
