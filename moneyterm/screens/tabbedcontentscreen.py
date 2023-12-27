@@ -25,13 +25,15 @@ from textual.widgets import (
     OptionList,
     Rule,
     Checkbox,
+    Markdown,
 )
 from rich.table import Table
 from textual.containers import Horizontal, Grid, VerticalScroll
 from moneyterm.utils.ledger import Ledger
 from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
-from moneyterm.screens.addgroupscreen import AddGroupScreen
+from moneyterm.screens.addlabelscreen import AddLabelScreen
+from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
 from moneyterm.widgets.categorizer import Categorizer
@@ -48,13 +50,14 @@ class TabbedContentScreen(Screen):
     def compose(self) -> ComposeResult:
         """Compose the widgets."""
         self.transactions_table: TransactionTable = TransactionTable(self.ledger)
+        self.overview_widget: OverviewWidget = OverviewWidget(self.ledger)
 
         yield Header()
         yield Footer()
         yield ScopeSelectBar(self.ledger)
         with TabbedContent(initial="transactions_tab", id="tabbed_content"):
             with TabPane("Overview", id="overview_tab"):
-                yield Label("Overview")
+                yield self.overview_widget
             with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
             with TabPane("Manage", id="manage_tab"):
@@ -68,3 +71,8 @@ class TabbedContentScreen(Screen):
                 transaction_table.account = message.account
                 transaction_table.year = message.year
                 transaction_table.month = message.month
+        self.overview_widget.update_tables(message.account, message.year, message.month)
+
+    def on_categorizer_labels_updated(self) -> None:
+        self.log("Labels updated.")
+        self.overview_widget.refresh_tables()
