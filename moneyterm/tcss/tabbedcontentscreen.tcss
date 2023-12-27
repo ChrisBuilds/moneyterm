@@ -5,6 +5,19 @@ TabbedContentScreen{
 
 }
 
+TabbedContentScreen OverviewWidget {
+    height: auto;
+}
+
+TabbedContentScreen OverviewWidget Horizontal {
+    height: auto;
+    width: 100%;
+}
+
+TabbedContentScreen OverviewWidget TransactionMarkdownTable {
+    width: 1fr;
+}
+
 TabbedContent ContentSwitcher, DataTable{
     height: 1fr;
 }
@@ -34,19 +47,17 @@ TabbedContentScreen #manage_type_select{
     width: 20;
 }
 
-#group_create_remove_buttons{
+#label_create_remove_buttons{
     column-span: 2;
-    width: 40;
-}
-#create_new_group_button{
-    width: 40%;
-    margin-left: 2;
+    width: 100%;
 }
 
-#remove_group_button{
-    width:40%;
-    margin-left: 2;
+#label_create_remove_buttons Button {
+    width: 15;
+    margin-left: 1;
+    min-width: 4;
 }
+
 #match_fields_label {
     column-span: 3;
 }
@@ -96,14 +107,14 @@ TabbedContentScreen #manage_type_select{
 #section_split_rule{
     column-span: 4;
 }
-#match_label_row {
+#match_name_row {
     column-span: 4;
 
 }
-#match_label {
+#match_name {
     width: auto;
 }
-#match_label_input{
+#match_name_input{
     width: 20;
 }
 #color_label {
