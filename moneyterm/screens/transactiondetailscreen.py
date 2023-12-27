@@ -79,9 +79,19 @@ class TransactionDetailScreen(ModalScreen):
 
 **Amount** : {self.transaction.amount}
 
-**Account Number** : {self.transaction.account_number}
+**Account Number** : {self.transaction.account.number}
 
-**Categories** : {','.join(self.transaction.categories)}
+**Account Institution** : {self.transaction.account.institution}
+
+**Account Alias** : {self.transaction.account.alias}
+
+**Bills** : {','.join(self.transaction.labels.bills)}
+
+**Categories** : {','.join(self.transaction.labels.categories)}
+
+**Incomes** : {','.join(self.transaction.labels.incomes)}
+
+**Alias** : {self.transaction.alias}
 
 """
         self.markdown_widget = Markdown(self.markdown, id="transaction_detail_markdown")
@@ -101,9 +111,9 @@ class TransactionDetailScreen(ModalScreen):
         if key.key in close_screen_keys:
             self.dismiss(None)
 
-    def on_button_pressed(self, pressed: Button.Pressed) -> None:
-        """Remove the tag corresponding to the pressed button."""
-        tag_to_remove = pressed.button.name
-        if tag_to_remove:
-            self.ledger.remove_tag_from_tx(self.transaction, tag_to_remove)
-        pressed.button.remove()
+    # def on_button_pressed(self, pressed: Button.Pressed) -> None:
+    #     """Remove the tag corresponding to the pressed button."""
+    #     tag_to_remove = pressed.button.name
+    #     if tag_to_remove:
+    #         self.ledger.remove_tag_from_tx(self.transaction, tag_to_remove)
+    #     pressed.button.remove()
