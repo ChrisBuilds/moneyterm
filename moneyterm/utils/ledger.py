@@ -1,5 +1,22 @@
+"""
+This module, ledger.py, provides classes for managing financial transactions and accounts.
+
+Classes:
+    Account: Represents a financial account with attributes such as number, account type, institution, and an optional alias.
+
+    Labels: Manages lists of bill labels, category labels, and income labels.
+
+    Transaction: Represents a financial transaction with attributes such as date, transaction ID, memo, payee, transaction type, amount, account number, labels, and tags.
+
+    Ledger: Manages accounts and transactions. It provides methods to read the accounts and transactions from a pickle file.
+
+This module also imports and uses several external libraries such as datetime, dataclasses, pickle, ofxparse, and others for various functionalities.
+
+The module is part of a larger system for managing financial data and should be used in conjunction with other modules in the system.
+"""
+
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pickle
 from ofxparse import Account as ofx_account  # type: ignore
 from ofxparse import Transaction as ofx_transaction  # type: ignore
@@ -8,27 +25,68 @@ from collections import defaultdict
 from pathlib import Path
 from decimal import Decimal
 
-MAXTAGS = 5
 
-
-@dataclass
+@dataclass(kw_only=True)
 class Account:
+    """
+    Represents a financial account.
+
+    Attributes:
+        number (str): The account number.
+        account_type (str): The type of account.
+        institution (str): The financial institution associated with the account.
+        alias (str, optional): An optional alias for the account.
+    """
+
     number: str
     account_type: str
     institution: str
+    alias: str = ""
 
 
 @dataclass
+class Labels:
+    """
+    A class representing labels used in a ledger.
+
+    Attributes:
+        bills (list[str]): List of bill labels.
+        categories (list[str]): List of category labels.
+        incomes (list[str]): List of income labels.
+    """
+
+    bills: list[str] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
+    incomes: list[str] = field(default_factory=list)
+
+
+@dataclass(kw_only=True)
 class Transaction:
+    """
+    Represents a financial transaction.
+
+    Attributes:
+        date (datetime): The date of the transaction.
+        txid (str): The transaction ID.
+        memo (str): A description or note about the transaction.
+        payee (str): The payee or recipient of the transaction.
+        tx_type (str): The type of transaction.
+        amount (Decimal): The amount of the transaction.
+        account_number (str): The account number associated with the transaction.
+        labels (Labels): The labels associated with the transaction.
+        tags (list[str]): Additional tags for the transaction.
+    """
+
     date: datetime
     txid: str
     memo: str
     payee: str
     tx_type: str
     amount: Decimal
-    account_number: str
-    categories: list[str]
-    tags: list[str]
+    account: Account
+    labels: Labels
+    tags: list[str] = field(default_factory=list)
+    alias: str = ""
 
 
 class Ledger:
@@ -85,12 +143,21 @@ class Ledger:
         accounts_added = 0
         for account in ofx_data.accounts:
             if account.number not in self.accounts:
-                self.accounts[account.number] = Account(account.number, account.type, account.institution.organization)
+                self.accounts[account.number] = Account(
+                    number=account.number, account_type=account.type, institution=account.institution.organization
+                )
                 accounts_added += 1
             for tx in account.statement.transactions:
                 if tx.id not in self.transactions:
                     self.transactions[tx.id] = Transaction(
-                        tx.date, tx.id, tx.memo, tx.payee, tx.type, tx.amount, account.number, list(), list()
+                        date=tx.date.date(),
+                        txid=tx.id,
+                        memo=tx.memo,
+                        payee=tx.payee,
+                        tx_type=tx.type,
+                        amount=tx.amount,
+                        account=self.accounts[account.number],
+                        labels=Labels(),
                     )
                     transactions_added += 1
 
@@ -105,7 +172,7 @@ class Ledger:
         """
         dates = defaultdict(set)
         for tx in self.transactions.values():
-            if account_number is None or tx.account_number == account_number:
+            if account_number is None or tx.account.number == account_number:
                 dates[tx.date.year].add((tx.date.month, tx.date.strftime("%B")))
         return dates
 
@@ -126,6 +193,41 @@ class Ledger:
             raise ValueError(f"Transaction {txid} not found.")
         return transaction
 
+    def get_all_tx(self) -> list[Transaction]:
+        """Get all transactions.
+
+        Returns:
+            list[Transaction]: List of transactions
+        """
+        return sorted(self.transactions.values(), key=lambda tx: tx.date)
+
+    def get_tx_by_account(self, account_number: str) -> list[Transaction]:
+        """Get all transactions for an account.
+
+        Args:
+            account_number (str): Account number
+
+        Returns:
+            list[Transaction]: List of transactions
+        """
+        tx_list = [tx for tx in self.transactions.values() if tx.account.number == account_number]
+        return sorted(tx_list, key=lambda tx: tx.date)
+
+    def get_tx_by_year(self, account_number: str, year: int) -> list[Transaction]:
+        """Get all transactions for a given year.
+
+        Args:
+            account_number (str): Account number
+            year (int): Year
+
+        Returns:
+            list[Transaction]: List of transactions
+        """
+        tx_list = [
+            tx for tx in self.transactions.values() if tx.account.number == account_number and tx.date.year == year
+        ]
+        return sorted(tx_list, key=lambda tx: tx.date)
+
     def get_tx_by_month(self, account_number: str, year: int, month: int) -> list[Transaction]:
         """Get all transactions for a given month.
 
@@ -142,39 +244,30 @@ class Ledger:
         tx_list = [
             tx
             for tx in self.transactions.values()
-            if tx.account_number == account_number and tx.date.month == month and tx.date.year == year
+            if tx.account.number == account_number and tx.date.month == month and tx.date.year == year
         ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
-    def add_tag_to_tx(self, txid: str, tag_str: str) -> None:
-        """Add a tag to a transaction.
+    def add_label_to_tx(self, txid: str, label_str: str, label_type: str) -> None:
+        """Add a label to a transaction.
 
         Args:
             txid (str): Transaction ID
-            tag_str (str): Tag to add
+            label_str (str): Label to add
+            label_type (str): Type of label to add
         """
-        if tag_str not in self.transactions[txid].tags:
-            self.transactions[txid].tags.append(tag_str)
-
-    def remove_tag_from_tx(self, txid: str, tag_str: str) -> None:
-        """Remove a tag from a transaction.
-
-        Args:
-            txid (str): Transaction ID
-            tag_str (str): Tag to remove
-        """
-        if tag_str in self.transactions[txid].tags:
-            self.transactions[txid].tags.remove(tag_str)
-
-    def add_category_to_tx(self, txid: str, category_str: str):
-        """Add a category to a transaction.
-
-        Args:
-            txid (str): Transaction ID
-            category_str (str): Category to add
-        """
-        if category_str not in self.transactions[txid].categories:
-            self.transactions[txid].categories.append(category_str)
+        if label_type == "bills":
+            if label_str not in self.transactions[txid].labels.bills:
+                self.transactions[txid].labels.bills.append(label_str)
+                self.transactions[txid].labels.bills.sort()
+        elif label_type == "categories":
+            if label_str not in self.transactions[txid].labels.categories:
+                self.transactions[txid].labels.categories.append(label_str)
+                self.transactions[txid].labels.categories.sort()
+        elif label_type == "incomes":
+            if label_str not in self.transactions[txid].labels.incomes:
+                self.transactions[txid].labels.incomes.append(label_str)
+                self.transactions[txid].labels.incomes.sort()
 
     def remove_category_from_tx(self, txid: str, category_str: str):
         """Remove a category from a transaction.
@@ -183,8 +276,8 @@ class Ledger:
             txid (str): Transaction ID
             category_str (str): Category to remove
         """
-        if category_str in self.transactions[txid].categories:
-            self.transactions[txid].categories.remove(category_str)
+        if category_str in self.transactions[txid].labels.categories:
+            self.transactions[txid].labels.categories.remove(category_str)
 
     def get_all_tx_with_category(self, category: str) -> list[Transaction]:
         """Get all transactions with a given category.
@@ -195,5 +288,5 @@ class Ledger:
         Returns:
             list[Transaction]: List of transactions with the given category
         """
-        tx_list = [tx for tx in self.transactions.values() if category in tx.categories]
+        tx_list = [tx for tx in self.transactions.values() if category in tx.labels.categories]
         return tx_list
