@@ -1,0 +1,35 @@
+RenameLabelScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+RenameLabelScreen Vertical {
+    height: auto;
+    width: auto;
+    border: round $secondary;
+    border-title-align: center;
+}
+RenameLabelScreen Label {
+    padding-bottom: 1;
+}
+RenameLabelScreen Horizontal {
+    height: auto;
+    width: auto;
+}
+
+RenameLabelScreen #new_label_name_label {
+    text-align: right;
+    content-align-vertical: middle;
+    height: 3;
+}
+
+RenameLabelScreen #new_label_name_input {
+    height: auto;
+    width: 30;
+}
+
+RenameLabelScreen #rename_label_button {
+    width: 100%;
+    margin-top: 1;
+}
