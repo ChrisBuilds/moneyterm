@@ -22,7 +22,7 @@ TabbedContent ContentSwitcher, DataTable{
     height: 1fr;
 }
 
-TabbedContentScreen Categorizer {
+TabbedContentScreen Labeler {
     height: auto;
 }
 
@@ -155,7 +155,7 @@ Button:focus {
     height: 12;
 }
 
-Categorizer #transactions_table {
+Labeler #transactions_table {
     height: 100%;
     width: 100%;
     border: round $secondary;
