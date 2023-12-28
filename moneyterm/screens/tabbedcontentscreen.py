@@ -36,7 +36,7 @@ from moneyterm.screens.addlabelscreen import AddLabelScreen
 from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
-from moneyterm.widgets.categorizer import Categorizer
+from moneyterm.widgets.labeler import Labeler
 from datetime import datetime
 
 
@@ -61,7 +61,7 @@ class TabbedContentScreen(Screen):
             with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
             with TabPane("Labeler", id="labeler_tab"):
-                yield Categorizer(self.ledger)
+                yield Labeler(self.ledger)
             with TabPane("Trends", id="trends_tab"):
                 yield Label("Trends")
 
