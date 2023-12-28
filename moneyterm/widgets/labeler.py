@@ -48,7 +48,7 @@ MatchLabel = dict[str, MatchFields]
 LabelType = dict[str, MatchLabel]
 
 
-class Categorizer(Widget):
+class Labeler(Widget):
     class LabelsUpdated(Message):
         """Message sent when labels are updated."""
 
