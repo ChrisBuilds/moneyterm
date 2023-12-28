@@ -26,7 +26,7 @@ TabbedContentScreen Categorizer {
     height: auto;
 }
 
-TabbedContentScreen #manage_grid{
+TabbedContentScreen #labeler_grid{
     grid-size: 4 13;
     grid-rows: auto;
     border: round $secondary;
