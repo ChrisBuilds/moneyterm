@@ -29,6 +29,7 @@ from textual.widgets import (
     Markdown,
 )
 from rich.table import Table
+from rich.text import Text
 from textual.containers import Horizontal, Grid, VerticalScroll
 from moneyterm.utils.ledger import Ledger, Transaction
 from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
@@ -40,51 +41,6 @@ from moneyterm.widgets.categorizer import Categorizer
 from datetime import datetime
 
 
-class TransactionMarkdownTable(Markdown):
-    def __init__(self, ledger: Ledger, subject: str) -> None:
-        super().__init__()
-        self.ledger = ledger
-        self.subject = subject
-        self.transactions: list[Transaction] = []
-
-    def on_mount(self) -> None:
-        """Mount the widget."""
-        pass
-
-    def compose(self) -> ComposeResult:
-        yield Markdown("")
-
-    def generate_table(self, transactions_by_source: dict[str, list[Transaction]]) -> str:
-        table = ""
-        table_heading = """| Source | Date | Amount |
-| ------ | ---- | ------ |"""
-        table += table_heading
-
-        if not transactions_by_source:
-            table += f"\nNo {self.subject} transactions found."
-            return table
-
-        total_transaction_amount = Decimal(0)
-        for source_label in transactions_by_source:
-            source_heading = f"\n| {source_label} | | |"
-            table += source_heading
-            source_total = Decimal(0)
-            for transaction in transactions_by_source[source_label]:
-                total_transaction_amount += transaction.amount
-                source_total += transaction.amount
-                source_transaction_row = f"\n| | {transaction.date} | ${transaction.amount} |"
-                table += source_transaction_row
-            source_total_row = f"\n| | **Total {source_label.capitalize()}** | **${source_total}** |"
-            table += source_total_row
-            table += "\n| | | |"
-        table += f"\n| | **Total {self.subject.capitalize()}(s)** | **${total_transaction_amount}** |"
-        return table
-
-    def update_markdown(self, transactions_by_source: dict[str, list[Transaction]]) -> None:
-        """Update the markdown table when month selection changed."""
-        self.update(self.generate_table(transactions_by_source))
-
-
 class OverviewWidget(Widget):
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
@@ -93,8 +49,8 @@ class OverviewWidget(Widget):
         self.account: str | NoSelection = NoSelection()
         self.year: int | NoSelection = NoSelection()
         self.month: int | NoSelection = NoSelection()
-        self.income_table = TransactionMarkdownTable(self.ledger, "income")
-        self.bill_table = TransactionMarkdownTable(self.ledger, "bill")
+        self.income_table = Static()
+        self.bill_table = Static()
 
     def compose(self) -> ComposeResult:
         """Compose the widgets."""
@@ -132,9 +88,39 @@ class OverviewWidget(Widget):
                 if source_label not in bill_tx_by_source:
                     bill_tx_by_source[source_label] = list()
                 bill_tx_by_source[source_label].append(transaction)
+        self.income_table.update(self.make_table("income", income_tx_by_source))
+        self.bill_table.update(self.make_table("bill", bill_tx_by_source))
 
-        self.income_table.update_markdown(income_tx_by_source)
-        self.bill_table.update_markdown(bill_tx_by_source)
+    def make_table(self, source: str, transactions_by_source: dict[str, list[Transaction]]) -> Table:
+        """Make a table from the given transactions."""
+        table = Table(title=f"{source.capitalize()} Transactions")
+        table.add_column("Source")
+        table.add_column("Date", justify="right")
+        table.add_column("Amount")
+
+        if not transactions_by_source:
+            table.add_row("None", "", "")
+            return table
+
+        total_transaction_amount = Decimal(0)
+        for source_label in transactions_by_source:
+            source_total = Decimal(0)
+            for i, transaction in enumerate(transactions_by_source[source_label]):
+                total_transaction_amount += transaction.amount
+                source_total += transaction.amount
+                formatted_date = transaction.date.strftime("%m/%d/%Y")
+                table.add_row(
+                    f"{source_label if i == 0 else ''}",
+                    formatted_date,
+                    f"${transaction.amount}",
+                    end_section=len(transactions_by_source[source_label]) == 1,
+                )
+            if len(transactions_by_source[source_label]) > 1:
+                table.add_row("", f"Total {source_label}", f"${source_total}", end_section=True, style="bold")
+
+        table.add_row("", "Total", f"${total_transaction_amount}", style="bold")
+
+        return table
 
     def refresh_tables(self) -> None:
         """Refresh the tables with the same scope."""

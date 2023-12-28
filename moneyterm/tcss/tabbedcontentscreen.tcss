@@ -14,7 +14,7 @@ TabbedContentScreen OverviewWidget Horizontal {
     width: 100%;
 }
 
-TabbedContentScreen OverviewWidget TransactionMarkdownTable {
+TabbedContentScreen OverviewWidget Static {
     width: 1fr;
 }
 
