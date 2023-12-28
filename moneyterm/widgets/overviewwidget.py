@@ -37,7 +37,7 @@ from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 from moneyterm.screens.addlabelscreen import AddLabelScreen
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
-from moneyterm.widgets.categorizer import Categorizer
+from moneyterm.widgets.labeler import Labeler
 from datetime import datetime
 
 
