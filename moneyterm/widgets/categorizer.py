@@ -157,7 +157,7 @@ class Categorizer(Widget):
         with Horizontal(id="type_select_bar"):
             yield self.type_select_label
             yield self.type_select
-        with Grid(id="manage_grid"):
+        with Grid(id="labeler_grid"):
             # row 1
             yield self.label_select_label
             yield self.label_select
