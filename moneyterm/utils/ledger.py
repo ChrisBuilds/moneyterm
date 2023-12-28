@@ -240,7 +240,7 @@ class Ledger:
             list[Transaction]: List of transactions
         """
         if month not in range(1, 13):
-            return []
+            raise ValueError(f"Invalid month: {month}")
         tx_list = [
             tx
             for tx in self.transactions.values()
