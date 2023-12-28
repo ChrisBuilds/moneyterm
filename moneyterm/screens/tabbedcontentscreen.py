@@ -60,8 +60,10 @@ class TabbedContentScreen(Screen):
                 yield self.overview_widget
             with TabPane("Transactions", id="transactions_tab"):
                 yield self.transactions_table
-            with TabPane("Manage", id="manage_tab"):
+            with TabPane("Labeler", id="labeler_tab"):
                 yield Categorizer(self.ledger)
+            with TabPane("Trends", id="trends_tab"):
+                yield Label("Trends")
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """Update the tag summary table and transaction table when scope selection changed."""
