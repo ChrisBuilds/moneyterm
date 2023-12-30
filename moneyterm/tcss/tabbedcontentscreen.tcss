@@ -162,3 +162,96 @@ Labeler #transactions_table {
     border-title-align: left;
 
 }
+
+TabbedContentScreen ContentSwitcher, TrendSelector {
+    height: 1fr;
+}
+
+TrendSelector #trend_settings_vertical {
+    width: auto;
+    height: auto;
+    border: round $secondary;
+    border-title-align: left;
+}
+
+TrendSelector #selectors_horizontal {
+    width: auto;
+    height: auto;
+}
+
+TrendSelector #dates_horizontal {
+    width: auto;
+    height: auto;
+    padding-top: 1;
+    
+}
+
+TrendSelector Select {
+    width: 30;
+    height: auto;
+}
+
+TrendSelector Input {
+    width: 16;
+    height: auto;
+    margin-right: 1;
+}
+
+
+TrendAnalysis {
+    layout: grid;
+    grid-size: 2 3;
+    grid-columns: auto 1fr;
+    grid-rows: auto 8 3;
+    border: double $primary-lighten-3;
+    border-title-align: left;
+    border-title-color:  $secondary-darken-1;
+    height: 23;
+}
+
+
+
+TrendAnalysis #stats_table_static {
+    width: auto;
+    height: auto;
+    row-span: 2;
+    margin-bottom: 1;
+    
+}
+/*
+#table_horizontal_scroll {
+    width: 100%;
+    height: auto;
+    padding-bottom: 2;
+    
+}
+*/
+#chart_vertical {
+    width: 100;
+    height: auto;
+}
+
+#chart_static {
+    width: 100%;
+    content-align: center middle;
+    height: auto;
+    align: center middle;
+    border: solid $success-darken-2;
+
+    
+}
+
+TrendAnalysis #stats_by_month_table_static {
+    width: auto;
+    height: auto;
+    
+}
+
+#remove_analysis_button{
+    
+   
+}
+
+
+
+
