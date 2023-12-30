@@ -58,7 +58,7 @@ class TrendAnalysis(Widget):
         self.end_date = end_date
         self.stats_table_static = Static(id="stats_table_static")
         self.stats_by_month_table_static = Static(id="stats_by_month_table_static")
-        self.chart_static = Static(id="chart_static")
+        self.bar_graph_static = Static(id="bar_graph_static")
         self.border_title = f"{self.subject} Analysis"
 
     def on_mount(self) -> None:
@@ -67,10 +67,11 @@ class TrendAnalysis(Widget):
     def compose(self) -> ComposeResult:
         """Compose the widgets."""
         yield self.stats_table_static
-        yield self.chart_static
+        yield self.bar_graph_static
+        with Horizontal(id="button_container"):
+            yield Button("Remove", id="remove_analysis_button")
         with HorizontalScroll(id="table_horizontal_scroll"):
             yield self.stats_by_month_table_static
-        yield Button("Remove", id="remove_analysis_button")
 
     def iterate_months(self, start_date: datetime, end_date: datetime):
         while start_date <= end_date:
@@ -121,7 +122,7 @@ class TrendAnalysis(Widget):
 
         # make stats by month table for all months with transactions
         chart_data: list[float] = []
-        stats_by_month_table = Table(title="Stats by Month", box=box.MINIMAL)
+        stats_by_month_table = Table(box=box.MINIMAL)
         months_with_tx = [tx.date.replace(day=1) for tx in tx_with_label]
         start_month = min(months_with_tx)
         end_month = max(months_with_tx)
@@ -139,7 +140,7 @@ class TrendAnalysis(Widget):
             row_data.append(f"${month_total}")
         stats_by_month_table.add_row(*row_data)
         self.stats_by_month_table_static.update(stats_by_month_table)
-        self.chart_static.update(self.make_chart(chart_data, height=7, bar_width=max(1, 50 // len(row_data))))
+        self.bar_graph_static.update(self.make_chart(chart_data, height=7, bar_width=max(1, 50 // len(row_data))))
 
     @on(Button.Pressed, "#remove_analysis_button")
     def on_remove_analysis_button_press(self, event: Button.Pressed) -> None:
