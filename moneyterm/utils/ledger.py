@@ -279,14 +279,18 @@ class Ledger:
         if category_str in self.transactions[txid].labels.categories:
             self.transactions[txid].labels.categories.remove(category_str)
 
-    def get_all_tx_with_category(self, category: str) -> list[Transaction]:
-        """Get all transactions with a given category.
+    def get_all_tx_with_label(self, label: str) -> list[Transaction]:
+        """Get all transactions with a given label.
 
         Args:
-            category (str): Category to search for
+            label (str): Category to search for
 
         Returns:
-            list[Transaction]: List of transactions with the given category
+            list[Transaction]: List of transactions with the given label
         """
-        tx_list = [tx for tx in self.transactions.values() if category in tx.labels.categories]
-        return tx_list
+        tx_with_label: list[Transaction] = []
+        for tx in self.transactions.values():
+            all_labels = tx.labels.bills + tx.labels.categories + tx.labels.incomes
+            if label in all_labels:
+                tx_with_label.append(tx)
+        return tx_with_label
