@@ -37,6 +37,7 @@ from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
 from moneyterm.widgets.labeler import Labeler
+from moneyterm.widgets.trends import TrendSelector
 from datetime import datetime
 
 
@@ -63,7 +64,7 @@ class TabbedContentScreen(Screen):
             with TabPane("Labeler", id="labeler_tab"):
                 yield Labeler(self.ledger)
             with TabPane("Trends", id="trends_tab"):
-                yield Label("Trends")
+                yield TrendSelector(self.ledger)
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """Update the tag summary table and transaction table when scope selection changed."""
