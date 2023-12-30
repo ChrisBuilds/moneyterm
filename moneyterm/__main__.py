@@ -16,8 +16,6 @@ class MoneyTerm(App):
     def __init__(self) -> None:
         super().__init__()
         self.LEDGER.read_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
-        # self.LEDGER.load_ofx_data(Path("transactions.QFX"))
-        # self.LEDGER.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
 
     def on_mount(self) -> None:
         """Mount the app."""
