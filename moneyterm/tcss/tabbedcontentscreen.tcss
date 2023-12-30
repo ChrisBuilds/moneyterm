@@ -200,13 +200,13 @@ TrendSelector Input {
 
 TrendAnalysis {
     layout: grid;
-    grid-size: 2 3;
+    grid-size: 2 2;
     grid-columns: auto 1fr;
-    grid-rows: auto 8 3;
+    grid-rows: auto auto;
     border: double $primary-lighten-3;
     border-title-align: left;
     border-title-color:  $secondary-darken-1;
-    height: 23;
+    height: 18;
 }
 
 
@@ -214,24 +214,23 @@ TrendAnalysis {
 TrendAnalysis #stats_table_static {
     width: auto;
     height: auto;
-    row-span: 2;
     margin-bottom: 1;
     
 }
-/*
+
+TrendAnalysis #button_container {
+    width: 100%;
+    height: 100%;
+    align: left bottom;
+}
+
 #table_horizontal_scroll {
     width: 100%;
     height: auto;
-    padding-bottom: 2;
-    
-}
-*/
-#chart_vertical {
-    width: 100;
-    height: auto;
+    align: center middle;    
 }
 
-#chart_static {
+#bar_graph_static {
     width: 100%;
     content-align: center middle;
     height: auto;
@@ -244,6 +243,9 @@ TrendAnalysis #stats_table_static {
 TrendAnalysis #stats_by_month_table_static {
     width: auto;
     height: auto;
+    content-align: center top;
+    padding-bottom: 1;
+    
     
 }
 
