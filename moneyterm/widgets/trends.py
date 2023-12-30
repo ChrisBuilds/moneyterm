@@ -46,7 +46,6 @@ from moneyterm.widgets.labeler import LabelType
 from datetime import datetime, timedelta
 
 
-# TODO: Make container grid and add sparkline
 class TrendAnalysis(Widget):
     def __init__(
         self, ledger: Ledger, subject: str, start_date: datetime | None = None, end_date: datetime | None = None
