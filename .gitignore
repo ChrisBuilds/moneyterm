@@ -168,3 +168,4 @@ moneyterm/config/conf.toml
 moneyterm/data/identifiers.json
 moneyterm/data/ledger.pkl
 moneyterm/data/labels.json
+moneyterm/data/budgets.json
