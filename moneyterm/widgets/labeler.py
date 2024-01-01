@@ -88,7 +88,7 @@ class Labeler(Widget):
             id="start_date_input",
             classes="match_field_input",
         )
-        self.matches_option_list = OptionList(*(str(i) for i in range(20)), id="matches_option_list")
+        self.matches_option_list = OptionList(id="matches_option_list")
         self.end_date_label = Label("End Date", id="end_date_label")
         self.end_date_input = Input(
             placeholder="mm/dd/yyyy",
@@ -461,7 +461,9 @@ class Labeler(Widget):
         self.selected_match_option = None
         if isinstance(self.selected_label, NoSelection):
             return
-        for match_name in self.labels[self.selected_type][self.selected_label].keys():
+        for match_name in sorted(
+            list(self.labels[self.selected_type][self.selected_label].keys()), key=lambda x: x.lower()
+        ):
             new_option = Option(match_name, id=match_name)
             self.matches_option_list.add_option(new_option)
         if set_selection and set_selection in self.labels[self.selected_type][self.selected_label]:
