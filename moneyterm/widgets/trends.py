@@ -212,8 +212,7 @@ class TrendSelector(Widget):
                 yield self.end_date_label
                 yield self.end_date_input
                 yield self.add_analysis_button
-        with self.trend_analysis_vertical:
-            yield Label("")
+        yield self.trend_analysis_vertical
 
     def validate_date_format(self, date_str: str) -> bool:
         try:
