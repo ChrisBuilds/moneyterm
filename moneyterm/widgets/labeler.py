@@ -140,7 +140,7 @@ class Labeler(Widget):
         self.preview_table.border_title = "Transactions Preview Results"
 
     def on_mount(self):
-        # check for, and load, json data for groups
+        # check for, and load, json data for labels
         try:
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
