@@ -82,6 +82,22 @@ class TabbedContentScreen(Screen):
                 transaction_table.month = message.month
         self.overview_widget.update_tables(message.account, message.year, message.month)
 
-    def on_categorizer_labels_updated(self) -> None:
+    def on_labeler_labels_updated(self, event: Labeler.LabelsUpdated) -> None:
         self.log("Labels updated.")
         self.overview_widget.refresh_tables()
+        self.query_one(Budgeter).update_budgets_table()
+
+    def on_labeler_label_removed(self, event: Labeler.LabelRemoved) -> None:
+        self.log("Label removed.")
+        self.query_one(Budgeter).handle_category_removed(event.removed_label)
+        self.query_one(TrendSelector).handle_labels_updated()
+
+    def on_labeler_label_renamed(self, event: Labeler.LabelRenamed) -> None:
+        self.log("Label renamed.")
+        self.query_one(Budgeter).handle_category_renamed(event.old_label, event.new_label)
+        self.query_one(TrendSelector).handle_labels_updated()
+
+    def on_labeler_label_added(self, event: Labeler.LabelAdded) -> None:
+        self.log("Label added.")
+        self.query_one(Budgeter).handle_category_added()
+        self.query_one(TrendSelector).handle_labels_updated()
