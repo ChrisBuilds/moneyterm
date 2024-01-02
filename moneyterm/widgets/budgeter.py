@@ -50,7 +50,6 @@ from dateutil.relativedelta import relativedelta  # type: ignore
 
 class BudgetBuilder(Widget):
     selected_category: reactive[str | NoSelection] = reactive(NoSelection)
-    selected_budget_option: reactive[Option | None] = reactive(None)
 
     class BudgetAdded(Message):
         """Message sent when a budget is added/modified."""
@@ -65,39 +64,37 @@ class BudgetBuilder(Widget):
         self.budgets = budgets
         self.category_select_label = Label("Category", id="category_select_label")
         self.category_select: Select[str] = Select([("a", "a")], id="category_select", prompt="Select a category")
-        self.monthly_budget_label = Label("Monthly Budget", id="monthly_budget_label")
         self.monthly_budget_input = self.amount_input = Input(
             placeholder="Ex: 150.00",
             restrict=r"[0-9\.\-]*",
             validators=[
                 Function(
-                    self.validate_amount_is_decimal,
+                    self.validate_amount_is_decimal_or_blank,
                     "Amount must be number/decimal. Ex: 3, 3.01",
                 )
             ],
             id="monthly_budget_input",
         )
-        self.budgets_option_list = OptionList(id="budgets_option_list")
-        self.add_to_budget_button = Button("Add to Budget", id="add_to_budget_button")
-        self.delete_budget_button = Button("Delete Budget", id="delete_budget_button")
+        self.save_budgets_button = Button("Save Budgets", id="save_budgets_button")
 
     def compose(self) -> ComposeResult:
-        with Horizontal(id="category_hz"):
+        with Horizontal(id="builder_hz"):
             yield self.category_select_label
             yield self.category_select
-        yield self.budgets_option_list
-        with Horizontal(id="budget_input_hz"):
-            yield self.monthly_budget_label
             yield self.monthly_budget_input
-        with Horizontal(id="add_to_budget_button_hz"):
-            yield self.add_to_budget_button
-        yield self.delete_budget_button
+            yield self.save_budgets_button
 
-    def validate_amount_is_decimal(self, amount: str) -> bool:
+    def validate_amount_is_decimal_or_blank(self, amount: str) -> bool:
+        if not amount:
+            self.save_budgets_button.disabled = False
+            return True
         try:
-            Decimal(amount)
+            decimal_amount = Decimal(amount)
+            assert decimal_amount >= 0
+            self.save_budgets_button.disabled = False
             return True
         except:
+            self.save_budgets_button.disabled = True
             return False
 
     @on(Select.Changed, "#category_select")
@@ -107,56 +104,27 @@ class BudgetBuilder(Widget):
         else:
             self.selected_category = str(event.value)
 
-    @on(OptionList.OptionSelected, "#budgets_option_list")
-    def on_budgets_option_list_select(self, event: OptionList.OptionSelected):
-        self.selected_budget_option = event.option
-        selected_option_budget = self.budgets[str(self.selected_budget_option.id)]["monthly_budget"]
-        self.monthly_budget_input.value = f"{selected_option_budget}"
-
-    @on(Button.Pressed, "#add_to_budget_button")
-    def on_add_to_budget_button_press(self, event: Button.Pressed):
+    @on(Button.Pressed, "#save_budgets_button")
+    def on_save_budgets_button_press(self, event: Button.Pressed):
         if isinstance(self.selected_category, NoSelection):
             self.notify("A category must be selected to add a budget", severity="error", title="No Category Selected")
-            return
-        if self.monthly_budget_input.value == "":
-            self.notify("A budget amount must be entered", severity="error", title="No Budget Amount Entered")
             return
 
         self.budgets[self.selected_category] = {"monthly_budget": self.monthly_budget_input.value}
         self.post_message(self.BudgetAdded())
 
-    @on(Button.Pressed, "#delete_budget_button")
-    def on_delete_budget_button_press(self, event: Button.Pressed):
-        if self.selected_budget_option:
-            message = f"Are you sure you want to delete the budget for {self.selected_budget_option.id}?"
-            self.app.push_screen(ConfirmScreen(message), self.remove_selected_budget)
-
     def watch_selected_category(self) -> None:
-        self.monthly_budget_input.value = ""
-
-    def watch_selected_budget_option(self) -> None:
-        pass
-
-    def update_budget_options(self):
-        self.budgets_option_list.clear_options()
-        for category in sorted(list(self.budgets)):
-            self.budgets_option_list.add_option(
-                Option(
-                    category,
-                    category,
-                )
-            )
+        if isinstance(self.selected_category, NoSelection):
+            self.monthly_budget_input.value = ""
+        else:
+            if self.selected_category in self.budgets:
+                self.monthly_budget_input.value = self.budgets[self.selected_category]["monthly_budget"]
 
     def update_category_select(self, labels: dict[str, LabelType]):
         if "Categories" in labels:
             options = [(category, category) for category in labels["Categories"]]
             options.sort(key=lambda x: x[0])
             self.category_select.set_options(options)
-
-    def remove_selected_budget(self, confirm: bool):
-        if confirm and self.selected_budget_option:
-            del self.budgets[str(self.selected_budget_option.id)]
-            self.post_message(self.BudgetAdded())
 
 
 class Budgeter(Widget):
@@ -190,7 +158,6 @@ class Budgeter(Widget):
             self.budgets = {}
 
         self.builder.budgets = self.budgets
-        self.builder.update_budget_options()
         self.update_budgets_table()
 
         # load labels from labels json
@@ -204,7 +171,6 @@ class Budgeter(Widget):
     def on_budget_builder_budget_added(self, message: BudgetBuilder.BudgetAdded):
         self.budgets = self.builder.budgets
         self.write_budgets_json()
-        self.builder.update_budget_options()
         self.update_budgets_table()
 
     def write_budgets_json(self):
@@ -228,14 +194,18 @@ class Budgeter(Widget):
         budgets_table.add_column("Monthly Budget")
         budgets_table.add_column("Spent")
         budgets_table.add_column("Remaining")
+        budgets_table.add_column("Last Month Spent")
         budgets_table.add_column("Last Month Remaining")
 
         if not self.budgets:
             self.budgets_table_static.update("No budgets set.")
             return
+        row_added = False
         last_month = datetime.now() - relativedelta(months=1)
         for budget_category in sorted(list(self.budgets)):
             for _, budget_amount in self.budgets[budget_category].items():
+                if not budget_amount:
+                    continue
                 decimal_budget_amount = Decimal(budget_amount)
                 last_month_spent, last_month_remaining = get_budget_stats_for_month(
                     last_month.month, last_month.year, budget_category
@@ -243,11 +213,26 @@ class Budgeter(Widget):
                 total_transactions_amount, remaining_budget = get_budget_stats_for_month(
                     datetime.now().month, datetime.now().year, budget_category
                 )
+                remaining_budget_colored = Text(f"${remaining_budget}")
+                if remaining_budget > 0:
+                    remaining_budget_colored.stylize("bold green")
+                else:
+                    remaining_budget_colored.stylize("bold red")
+                last_month_remaining_colored = Text(f"${last_month_remaining}")
+                if last_month_remaining > 0:
+                    last_month_remaining_colored.stylize("bold green")
+                else:
+                    last_month_remaining_colored.stylize("bold red")
                 budgets_table.add_row(
                     budget_category,
                     f"${decimal_budget_amount}",
                     f"${total_transactions_amount}",
-                    f"${remaining_budget}",
-                    f"${last_month_remaining}",
+                    remaining_budget_colored,
+                    f"${last_month_spent}",
+                    last_month_remaining_colored,
                 )
+                row_added = True
+        if not row_added:
+            self.budgets_table_static.update("No budgets set.")
+            return
         self.budgets_table_static.update(budgets_table)
