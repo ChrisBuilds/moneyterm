@@ -39,6 +39,7 @@ from moneyterm.widgets.transactiontable import TransactionTable
 from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
+from moneyterm.widgets.config import Config
 from datetime import datetime
 
 
@@ -69,7 +70,7 @@ class TabbedContentScreen(Screen):
             with TabPane("Budget", id="budget_tab"):
                 yield Budgeter(self.ledger)
             with TabPane("Config", id="config_tab"):
-                yield Label("Config")
+                yield Config(self.ledger)
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """Update the tag summary table and transaction table when scope selection changed."""
