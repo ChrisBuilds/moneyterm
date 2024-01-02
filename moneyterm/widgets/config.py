@@ -54,25 +54,13 @@ class Config(Widget):
             yield Label("Extension", id="extension_label")
             yield self.extension_input
         with Horizontal(id="alias_horizontal"):
-            yield Label("Alias", id="alias_label")
+            yield Label("Account", id="alias_label")
             yield self.alias_account_select
             yield self.alias_account_input
         yield self.save_config_button
 
     def on_mount(self) -> None:
-        # check for, and load, json data for config
-        try:
-            with open(Path("moneyterm/data/config.json"), "r") as f:
-                self.config = json.load(f)
-        except FileNotFoundError as e:
-            self.config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
-        except json.decoder.JSONDecodeError as e:
-            self.notify(
-                f"Invalid config file. Exception: {e.msg}",
-                severity="warning",
-                timeout=7,
-            )
-            self.config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
+        self.load_config_json()
         if isinstance(self.config["import_directory"], str):
             self.directory_input.value = self.config["import_directory"]
         if isinstance(self.config["import_extension"], str):
@@ -86,6 +74,20 @@ class Config(Widget):
         self.alias_account_select.set_options(((account, account) for account in self.ledger.accounts))
         self.alias_account_select.clear()
         self.alias_account_input.value = ""
+
+    def load_config_json(self) -> None:
+        try:
+            with open(Path("moneyterm/data/config.json"), "r") as f:
+                self.config = json.load(f)
+        except FileNotFoundError as e:
+            self.config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
+        except json.decoder.JSONDecodeError as e:
+            self.notify(
+                f"Invalid config file. Exception: {e.msg}",
+                severity="warning",
+                timeout=7,
+            )
+            self.config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
 
     def write_config_json(self):
         with open(Path("moneyterm/data/config.json"), "w") as f:
@@ -104,6 +106,16 @@ class Config(Widget):
                 and isinstance(self.alias_account_select.value, str)
                 and isinstance(self.alias_account_input.value, str)
             ):
-                self.config["account_aliases"][self.alias_account_select.value] = self.alias_account_input.value
+                self.config["account_aliases"][
+                    self.alias_account_select.value
+                ] = f"{self.alias_account_input.value} *{self.alias_account_select.value[-4:]}"
         self.write_config_json()
         self.post_message(self.ConfigUpdated())
+
+    @on(Select.Changed, "#alias_account_select")
+    def on_alias_account_select_change(self, event: Select.Changed) -> None:
+        if isinstance(self.config["account_aliases"], dict) and isinstance(event.value, str):
+            if event.value in self.config["account_aliases"]:
+                self.alias_account_input.value = self.config["account_aliases"][event.value]
+            else:
+                self.alias_account_input.value = ""
