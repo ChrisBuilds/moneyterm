@@ -221,6 +221,14 @@ class TrendSelector(Widget):
         except:
             return False
 
+    def load_labels_from_json(self) -> None:
+        """Load the labels from the json file."""
+        try:
+            with open(Path("moneyterm/data/labels.json"), "r") as f:
+                self.labels = json.load(f)
+        except FileNotFoundError:
+            self.labels = {"Bills": {}, "Categories": {}, "Incomes": {}}
+
     def update_label_selector(self, set_selection: str | None = None) -> None:
         """Update the label select options based on the selected type.
 
@@ -228,7 +236,7 @@ class TrendSelector(Widget):
             set_selection (str | None, optional): String option to select after the update. Defaults to None.
         """
         label_options = [(label, label) for label in self.labels[self.selected_type]]
-        label_options.sort(key=lambda x: x[0])
+        label_options.sort(key=lambda x: x[0].lower())
         self.label_selector.set_options(label_options)
         if set_selection:
             self.label_selector.value = set_selection
@@ -275,3 +283,8 @@ class TrendSelector(Widget):
         new_analysis = TrendAnalysis(self.ledger, str(self.selected_label), start_date, end_date)
         self.trend_analysis_vertical.mount(new_analysis)
         new_analysis.scroll_visible()
+
+    def handle_labels_updated(self) -> None:
+        """Handle labels updated event."""
+        self.load_labels_from_json()
+        self.update_label_selector()
