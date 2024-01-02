@@ -318,6 +318,35 @@ BudgetBuilder #monthly_budget_input {
     height: auto;
 }
 
+TabbedContentScreen ContentSwitcher, Config {
+    height: 1fr;
+}
 
+Config #import_horizontal{
+    height: auto;
+    width: 100%;
+    padding-bottom: 1;
+}
 
+Config #import_directory_input{
+    width: 50;
+}
+
+Config #import_extension_input {
+    width: 14;
+}
+
+Config #alias_horizontal{
+    height: auto;
+    width: 100%;
+    padding-bottom: 1;
+}
+
+Config #alias_account_select {
+    width: 30;
+}
+
+Config #alias_account_input {
+    width: 30;
+}
 
