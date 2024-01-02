@@ -268,20 +268,15 @@ Budgeter #budget_tables_vertical_scroll {
 BudgetBuilder {
     height: auto;
     width: auto;
-    layout: grid;
-    grid-size: 2 3;
-    grid-columns: auto 30;
-    grid-rows: 4 7 auto;
     border: round $secondary;
     border-title-align: left;
     border-title-color:  $secondary-darken-1;
     
 }
 
-BudgetBuilder #category_hz {
+BudgetBuilder #builder_hz {
     width: auto;
     height: auto;
-    margin-bottom: 1;
 }
 
 #category_select {
@@ -289,29 +284,10 @@ BudgetBuilder #category_hz {
     height: auto;
 }
 
-BudgetBuilder #budgets_option_list {
-    row-span: 2;
-    width: 40;
-    height: 10;
-    margin-bottom: 1;
+
+BudgetBuilder #save_budgets_button {
+    margin-right: 1;
 }
-
-BudgetBuilder #budget_input_hz {
-    width: auto;
-    height: auto;
-    margin-bottom: 1;
-}
-
-BudgetBuilder #add_to_budget_button_hz {
-    width: 100%;
-    height: 7;
-}
-
-BudgetBuilder #add_to_budget_button {
-}
-
-
-
 
 BudgetBuilder #monthly_budget_input {
     width: 20;
