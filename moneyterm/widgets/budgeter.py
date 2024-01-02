@@ -86,23 +86,27 @@ class BudgetBuilder(Widget):
 
     def validate_amount_is_decimal_or_blank(self, amount: str) -> bool:
         if not amount:
-            self.save_budgets_button.disabled = False
             return True
         try:
             decimal_amount = Decimal(amount)
             assert decimal_amount >= 0
-            self.save_budgets_button.disabled = False
             return True
         except:
-            self.save_budgets_button.disabled = True
             return False
 
     @on(Select.Changed, "#category_select")
     def on_category_select_change(self, event: Select.Changed):
-        if self.category_select.is_blank():
+        if event.value == Select.BLANK:
             self.selected_category = NoSelection()
         else:
             self.selected_category = str(event.value)
+
+    @on(Input.Changed, "#monthly_budget_input")
+    def on_monthly_budget_input_change(self, event: Input.Changed):
+        if event.validation_result and not event.validation_result.is_valid:
+            self.save_budgets_button.disabled = True
+        else:
+            self.save_budgets_button.disabled = False
 
     @on(Button.Pressed, "#save_budgets_button")
     def on_save_budgets_button_press(self, event: Button.Pressed):
@@ -123,7 +127,7 @@ class BudgetBuilder(Widget):
     def update_category_select(self, labels: dict[str, LabelType]):
         if "Categories" in labels:
             options = [(category, category) for category in labels["Categories"]]
-            options.sort(key=lambda x: x[0])
+            options.sort(key=lambda x: x[0].lower())
             self.category_select.set_options(options)
 
 
@@ -161,6 +165,9 @@ class Budgeter(Widget):
         self.update_budgets_table()
 
         # load labels from labels json
+        self.load_labels_from_json()
+
+    def load_labels_from_json(self) -> None:
         try:
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
@@ -236,3 +243,23 @@ class Budgeter(Widget):
             self.budgets_table_static.update("No budgets set.")
             return
         self.budgets_table_static.update(budgets_table)
+
+    def handle_category_renamed(self, old_category: str, new_category: str):
+        if old_category in self.budgets:
+            self.budgets[new_category] = self.budgets.pop(old_category)
+            self.write_budgets_json()
+            self.update_budgets_table()
+            self.load_labels_from_json()
+            self.builder.update_category_select(self.labels)
+
+    def handle_category_removed(self, category: str):
+        if category in self.budgets:
+            del self.budgets[category]
+            self.write_budgets_json()
+            self.update_budgets_table()
+            self.load_labels_from_json()
+            self.builder.update_category_select(self.labels)
+
+    def handle_category_added(self):
+        self.load_labels_from_json()
+        self.builder.update_category_select(self.labels)
