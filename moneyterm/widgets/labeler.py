@@ -6,7 +6,6 @@ from textual.app import ComposeResult
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual import events
 from textual.types import NoSelection
 from textual.validation import Function
 from textual.widgets.option_list import Option
@@ -54,6 +53,28 @@ class Labeler(Widget):
 
         def __init__(self) -> None:
             super().__init__()
+
+    class LabelRenamed(Message):
+        """Message sent when a label is renamed."""
+
+        def __init__(self, old_label: str, new_label: str) -> None:
+            super().__init__()
+            self.old_label = old_label
+            self.new_label = new_label
+
+    class LabelRemoved(Message):
+        """Message sent when a label is removed."""
+
+        def __init__(self, removed_label: str) -> None:
+            super().__init__()
+            self.removed_label = removed_label
+
+    class LabelAdded(Message):
+        """Message sent when a label is added."""
+
+        def __init__(self, added_label: str) -> None:
+            super().__init__()
+            self.added_label = added_label
 
     selected_type: reactive[str] = reactive("Bills")
     selected_label: reactive[str | NoSelection] = reactive(NoSelection)
@@ -251,6 +272,7 @@ class Labeler(Widget):
             return
         if confirm:
             self.labels[self.selected_type].pop(self.selected_label)
+            self.post_message(self.LabelRemoved(removed_label=self.selected_label))
             self.write_labels_json()
             self.update_label_select()
 
@@ -265,9 +287,11 @@ class Labeler(Widget):
     def rename_label(self, new_label_name: str) -> None:
         if isinstance(self.selected_label, NoSelection):
             return
+        old_label = self.selected_label
         self.labels[self.selected_type][new_label_name] = self.labels[self.selected_type].pop(self.selected_label)
         self.write_labels_json()
         self.update_label_select(set_selection=new_label_name)
+        self.post_message(self.LabelRenamed(old_label=old_label, new_label=new_label_name))
 
     @on(Button.Pressed, "#save_button")
     def on_save_button_press(self, event: Button.Pressed) -> None:
