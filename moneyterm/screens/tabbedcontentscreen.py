@@ -1,3 +1,5 @@
+from pathlib import Path
+import json
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import (
@@ -14,6 +16,8 @@ from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
 from moneyterm.widgets.config import Config
+
+DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}}
 
 
 class TabbedContentScreen(Screen):
@@ -61,6 +65,107 @@ class TabbedContentScreen(Screen):
                 yield Budgeter(self.ledger)
             with TabPane("Config", id="config_tab"):
                 yield Config(self.ledger)
+
+    def on_mount(self) -> None:
+        """
+        Mount the screen.
+
+        Returns:
+            None
+
+        """
+        self.load_config_json()
+        self.import_transactions()
+
+    def load_config_json(self) -> None:
+        """
+        Load the configuration from a JSON file.
+        """
+        try:
+            self.config = self.read_config_file()
+        except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+            self.notify(
+                f"Failed to load config file. Exception: {str(e)}",
+                severity="warning",
+                timeout=7,
+            )
+            self.config = DEFAULT_CONFIG
+
+    def read_config_file(self):
+        """
+        Reads the configuration file and returns its contents as a dictionary.
+
+        Returns:
+            dict: The contents of the configuration file.
+        """
+        with Path("moneyterm/data/config.json").open("r") as config_file:
+            return json.load(config_file)
+
+    def import_transactions(self) -> None:
+        """
+        Import transactions from a directory.
+
+        Returns:
+            None
+
+        """
+        self.log("Importing transactions.")
+        self.load_config_json()
+        if not self.config["import_directory"]:
+            self.notify(
+                "Import directory not set. Please set it in the config tab.",
+                severity="warning",
+                timeout=7,
+                title="Import Error",
+            )
+            return
+        import_dir = Path(self.config["import_directory"])
+        if not import_dir.exists():
+            self.notify(
+                f"Import directory ({import_dir}) does not exist. Correct this in the config tab.",
+                severity="warning",
+                timeout=7,
+                title="Import Error",
+            )
+            return
+        if not import_dir.is_dir():
+            self.notify(
+                f"Import directory ({import_dir}) is not a directory. Correct this in the config tab.",
+                severity="warning",
+                timeout=7,
+                title="Import Error",
+            )
+            return
+        # iterate over files in import directory for files with the import_extension extension
+        overall_load_results: dict[str, int] = {
+            "source_files": 0,
+            "accounts_added": 0,
+            "transactions_added": 0,
+            "transactions_ignored": 0,
+        }
+        for file in import_dir.iterdir():
+            if file.suffix == self.config["import_extension"]:
+                load_results = self.ledger.load_ofx_data(file)
+                if any(load_results.values()):
+                    overall_load_results["source_files"] += 1
+                    overall_load_results["accounts_added"] += load_results["accounts_added"]
+                    overall_load_results["transactions_added"] += load_results["transactions_added"]
+                    overall_load_results["transactions_ignored"] += load_results["transactions_ignored"]
+        self.notify(
+            f"Import complete. {overall_load_results['source_files']} source files processed. "
+            f"{overall_load_results['accounts_added']} accounts added. "
+            f"{overall_load_results['transactions_added']} transactions added. "
+            f"{overall_load_results['transactions_ignored']} transactions ignored.",
+            title="Import Complete",
+            timeout=7,
+        )
+        self.ledger.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
+        self.query_one(ScopeSelectBar).refresh_all_selects()
+        for transaction_table in self.query(TransactionTable):
+            transaction_table.update_data()
+        self.query_one(OverviewWidget).refresh_tables()
+        self.query_one(Budgeter).update_budgets_table()
+        self.query_one(TrendSelector).handle_labels_updated()
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """
@@ -155,3 +260,17 @@ class TabbedContentScreen(Screen):
         self.query_one(ScopeSelectBar).refresh_all_selects()
         for transaction_table in self.query(TransactionTable):
             transaction_table.update_data()
+
+    def on_config_import_transactions(self, event: Config.ImportTransactions) -> None:
+        """
+        Event handler for when transactions are imported.
+
+        Args:
+            event (Config.ImportTransactions): The event object.
+
+        Returns:
+            None
+
+        """
+        self.import_transactions()
+        self.log("Transactions imported.")
