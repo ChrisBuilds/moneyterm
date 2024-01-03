@@ -128,25 +128,24 @@ class Ledger:
         except:
             return "failure"
 
-    def load_ofx_data(self, data_file: Path) -> None:
+    def load_ofx_data(self, data_file: Path) -> dict[str, int]:
         """Load OFX data from a file.
 
         Args:
             data_file (Path): Path to the OFX file.
         """
+        load_results = {"accounts_added": 0, "transactions_added": 0, "transactions_ignored": 0}
         if not data_file.exists():
-            return
+            return load_results
         ofx_data = data_importer.load_ofx_data(data_file)
         account: ofx_account
         tx: ofx_transaction
-        transactions_added = 0
-        accounts_added = 0
         for account in ofx_data.accounts:
             if account.number not in self.accounts:
                 self.accounts[account.number] = Account(
                     number=account.number, account_type=account.type, institution=account.institution.organization
                 )
-                accounts_added += 1
+                load_results["accounts_added"] += 1
             for tx in account.statement.transactions:
                 if tx.id not in self.transactions:
                     self.transactions[tx.id] = Transaction(
@@ -156,10 +155,13 @@ class Ledger:
                         payee=tx.payee,
                         tx_type=tx.type,
                         amount=tx.amount,
-                        account=self.accounts[account.number],
+                        account=account.number,
                         labels=Labels(),
                     )
-                    transactions_added += 1
+                    load_results["transactions_added"] += 1
+                else:
+                    load_results["transactions_ignored"] += 1
+        return load_results
 
     def find_dates_with_tx_activity(self, account_number: str | None = None) -> defaultdict[int, set[tuple[int, str]]]:
         """Find all dates with transaction activity.
