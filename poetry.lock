@@ -629,6 +629,22 @@ lxml = "*"
 six = "*"
 
 [[package]]
+name = "plotext"
+version = "5.2.8"
+description = "plotext plots directly on terminal"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "plotext-5.2.8-py3-none-any.whl", hash = "sha256:7364cf72e6c9bffaf96158340fd2e0058faf404edbbc1e7a2aed421c8638d475"},
+    {file = "plotext-5.2.8.tar.gz", hash = "sha256:319a287baabeb8576a711995f973a2eba631c887aa6b0f33ab016f12c50ffebe"},
+]
+
+[package.extras]
+completion = ["shtab"]
+image = ["pillow (>=8.4)"]
+video = ["ffpyplayer (>=4.3.5)", "opencv-python (>=4.5.5)", "pafy (>=0.5.5)", "pillow (>=8.4)", "youtube-dl (==2020.12.2)"]
+
+[[package]]
 name = "pygments"
 version = "2.17.2"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -734,6 +750,21 @@ click = ">=8.1.2"
 msgpack = ">=1.0.3"
 textual = ">=0.33.0"
 typing-extensions = ">=4.4.0,<5.0.0"
+
+[[package]]
+name = "textual-plotext"
+version = "0.2.1"
+description = "A Textual widget wrapper for the Plotext plotting library"
+optional = false
+python-versions = ">=3.7.2,<4.0"
+files = [
+    {file = "textual_plotext-0.2.1-py3-none-any.whl", hash = "sha256:a1055cf50fac9af11f56b5ff73442570eb5fd051e513b20aeb8b15a6a2abfcff"},
+    {file = "textual_plotext-0.2.1.tar.gz", hash = "sha256:bc6f2d75d8e20dda6321f8254dc3decda8f41f60e6e70a3ddd83b652b890c081"},
+]
+
+[package.dependencies]
+plotext = ">=5.2.8,<6.0.0"
+textual = ">=0.40.0"
 
 [[package]]
 name = "typing-extensions"
@@ -881,4 +912,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "bdfb4d6b1eb54cd354a803ae950932b399101241e14623323f61a4d295acad6a"
+content-hash = "a7065b784097f9d6e0c992457e889c4bc534c99eead821178fd29e6794da7239"
