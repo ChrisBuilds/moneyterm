@@ -62,7 +62,7 @@ class TransactionTable(DataTable):
     def add_transaction_row(self, tx: Transaction) -> None:
         self.cursor_type = "row"
         labels = ",".join(sorted(tx.labels.bills + tx.labels.categories + tx.labels.incomes))
-        account_alias = self.account_aliases.get(tx.account.number, tx.account)
+        account_alias = self.account_aliases.get(tx.account.number, tx.account.number)
         self.add_row(
             tx.date.strftime("%Y-%m-%d"),
             tx.alias if tx.alias else tx.payee,
