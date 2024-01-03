@@ -6,6 +6,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.types import NoSelection
 from textual.validation import Function
+from textual_plotext import PlotextPlot
 
 from textual.widgets import (
     Label,
@@ -35,8 +36,9 @@ class TrendAnalysis(Widget):
         self.end_date = end_date
         self.stats_table_static = Static(id="stats_table_static")
         self.stats_by_month_table_static = Static(id="stats_by_month_table_static")
-        self.bar_graph_static = Static(id="bar_graph_static")
+        # self.bar_graph_static = Static(id="bar_graph_static")
         self.border_title = f"{self.subject} Analysis"
+        self.plot_bar_graph = PlotextPlot(id="bar_graph_static")
 
     def on_mount(self) -> None:
         self.analyse()
@@ -44,7 +46,8 @@ class TrendAnalysis(Widget):
     def compose(self) -> ComposeResult:
         """Compose the widgets."""
         yield self.stats_table_static
-        yield self.bar_graph_static
+        with HorizontalScroll(id="bar_graph_horizontal_scroll"):
+            yield self.plot_bar_graph
         with Horizontal(id="button_container"):
             yield Button("Remove", id="remove_analysis_button")
         with HorizontalScroll(id="table_horizontal_scroll"):
@@ -99,12 +102,14 @@ class TrendAnalysis(Widget):
 
         # make stats by month table for all months with transactions
         chart_data: list[float] = []
+        chart_months: list[str] = []
         stats_by_month_table = Table(box=box.MINIMAL)
         months_with_tx = [tx.date.replace(day=1) for tx in tx_with_label]
         start_month = min(months_with_tx)
         end_month = max(months_with_tx)
         row_data = []
         for month in self.iterate_months(start_month, end_month):
+            chart_months.append(month.strftime("%b %Y"))
             month_tx = [tx for tx in tx_with_label if tx.date.month == month.month and tx.date.year == month.year]
             stats_by_month_table.add_column(month.strftime("%b %Y"))
             if len(month_tx) == 0:
@@ -117,7 +122,8 @@ class TrendAnalysis(Widget):
             row_data.append(f"${month_total}")
         stats_by_month_table.add_row(*row_data)
         self.stats_by_month_table_static.update(stats_by_month_table)
-        self.bar_graph_static.update(self.make_chart(chart_data, height=7, bar_width=max(1, 50 // len(row_data))))
+        # self.bar_graph_static.update(self.make_chart(chart_data, height=7, bar_width=max(1, 50 // len(row_data))))
+        self.plot_bar_graph.plt.bar(chart_months, chart_data, orientation="vertical", width=0.5)
 
     @on(Button.Pressed, "#remove_analysis_button")
     def on_remove_analysis_button_press(self, event: Button.Pressed) -> None:
