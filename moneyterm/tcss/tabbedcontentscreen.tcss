@@ -206,7 +206,7 @@ TrendAnalysis {
     border: double $primary-lighten-3;
     border-title-align: left;
     border-title-color:  $secondary-darken-1;
-    height: 18;
+    height: 30;
 }
 
 
@@ -230,10 +230,16 @@ TrendAnalysis #button_container {
     align: center middle;    
 }
 
+TrendAnalysis #bar_graph_horizontal_scroll {
+    width: 100%;
+    height: auto;
+
+}
+
 #bar_graph_static {
     width: 100%;
+    height: 20;
     content-align: center middle;
-    height: auto;
     align: center middle;
     border: solid $success-darken-2;
 
@@ -326,3 +332,6 @@ Config #alias_account_input {
     width: 30;
 }
 
+Config #import_transactions_button {
+    margin-left: 1;
+}
