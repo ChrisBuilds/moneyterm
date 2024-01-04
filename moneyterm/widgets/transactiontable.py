@@ -21,9 +21,9 @@ class TransactionTable(DataTable):
     month: reactive[int | NoSelection] = reactive(NoSelection)
 
     class RowSent(Message):
-        def __init__(self, tx_id: str) -> None:
+        def __init__(self, row_key: str) -> None:
             super().__init__()
-            self.tx_id = tx_id
+            self.account_number, self.txid = row_key.split(":")
 
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
@@ -70,7 +70,7 @@ class TransactionTable(DataTable):
             tx.amount,
             account_alias,
             labels,
-            key=tx.txid,
+            key=f"{tx.account.number}:{tx.txid}",
         )
 
     def load_config_json(self) -> None:
@@ -102,7 +102,8 @@ class TransactionTable(DataTable):
         if key.key == "i":
             if self.selected_row_key:
                 self.log(f"Showing transaction details for {self.selected_row_key}")
-                transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
+                account_number, txid = self.selected_row_key.split(":")
+                transaction = self.ledger.get_tx_by_txid(account_number, txid)
                 self.app.push_screen(TransactionDetailScreen(self.ledger, transaction))
 
         elif key.key == "I":
