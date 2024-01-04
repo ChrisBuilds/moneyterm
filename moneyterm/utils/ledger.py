@@ -92,7 +92,7 @@ class Transaction:
 class Ledger:
     def __init__(self) -> None:
         self.accounts: dict[str, Account] = dict()
-        self.transactions: dict[str, Transaction] = dict()
+        self.transactions: dict[tuple[str, str], Transaction] = dict()
 
     def read_ledger_pkl(self, pkl_file: Path) -> str:
         """Read the accounts and transactions dicts from a pickle file.
@@ -147,15 +147,15 @@ class Ledger:
                 )
                 load_results["accounts_added"] += 1
             for tx in account.statement.transactions:
-                if tx.id not in self.transactions:
-                    self.transactions[tx.id] = Transaction(
+                if (account.number, tx.id) not in self.transactions:
+                    self.transactions[(account.number, tx.id)] = Transaction(
                         date=tx.date.date(),
                         txid=tx.id,
                         memo=tx.memo,
                         payee=tx.payee,
                         tx_type=tx.type,
                         amount=tx.amount,
-                        account=account.number,
+                        account=self.accounts[account.number],
                         labels=Labels(),
                     )
                     load_results["transactions_added"] += 1
@@ -178,7 +178,7 @@ class Ledger:
                 dates[tx.date.year].add((tx.date.month, tx.date.strftime("%B")))
         return dates
 
-    def get_tx_by_txid(self, txid: str) -> Transaction:
+    def get_tx_by_txid(self, account_number: str, txid: str) -> Transaction:
         """Get a transaction by its ID.
 
         Args:
@@ -190,9 +190,9 @@ class Ledger:
         Returns:
             Transaction: The transaction
         """
-        transaction = self.transactions.get(txid)
+        transaction = self.transactions.get((account_number, txid))
         if transaction is None:
-            raise ValueError(f"Transaction {txid} not found.")
+            raise ValueError(f"Transaction ({account_number}, {txid}) not found.")
         return transaction
 
     def get_all_tx(self) -> list[Transaction]:
@@ -250,7 +250,7 @@ class Ledger:
         ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
-    def add_label_to_tx(self, txid: str, label_str: str, label_type: str) -> None:
+    def add_label_to_tx(self, account_number: str, txid: str, label_str: str, label_type: str) -> None:
         """Add a label to a transaction.
 
         Args:
@@ -259,27 +259,27 @@ class Ledger:
             label_type (str): Type of label to add
         """
         if label_type == "bills":
-            if label_str not in self.transactions[txid].labels.bills:
-                self.transactions[txid].labels.bills.append(label_str)
-                self.transactions[txid].labels.bills.sort()
+            if label_str not in self.transactions[(account_number, txid)].labels.bills:
+                self.transactions[(account_number, txid)].labels.bills.append(label_str)
+                self.transactions[(account_number, txid)].labels.bills.sort()
         elif label_type == "categories":
-            if label_str not in self.transactions[txid].labels.categories:
-                self.transactions[txid].labels.categories.append(label_str)
-                self.transactions[txid].labels.categories.sort()
+            if label_str not in self.transactions[(account_number, txid)].labels.categories:
+                self.transactions[(account_number, txid)].labels.categories.append(label_str)
+                self.transactions[(account_number, txid)].labels.categories.sort()
         elif label_type == "incomes":
-            if label_str not in self.transactions[txid].labels.incomes:
-                self.transactions[txid].labels.incomes.append(label_str)
-                self.transactions[txid].labels.incomes.sort()
+            if label_str not in self.transactions[(account_number, txid)].labels.incomes:
+                self.transactions[(account_number, txid)].labels.incomes.append(label_str)
+                self.transactions[(account_number, txid)].labels.incomes.sort()
 
-    def remove_category_from_tx(self, txid: str, category_str: str):
+    def remove_category_from_tx(self, account_number: str, txid: str, category_str: str):
         """Remove a category from a transaction.
 
         Args:
             txid (str): Transaction ID
             category_str (str): Category to remove
         """
-        if category_str in self.transactions[txid].labels.categories:
-            self.transactions[txid].labels.categories.remove(category_str)
+        if category_str in self.transactions[(account_number, txid)].labels.categories:
+            self.transactions[(account_number, txid)].labels.categories.remove(category_str)
 
     def get_all_tx_with_label(self, label: str) -> list[Transaction]:
         """Get all transactions with a given label.
