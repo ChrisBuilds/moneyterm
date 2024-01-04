@@ -187,6 +187,3 @@ class Config(Widget):
                     timeout=5,
                     title="Import Error",
                 )
-
-
-# todo refresh accounts after import
