@@ -29,26 +29,26 @@ from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
 from pathlib import Path
 
 
-class TagButtons(Widget):
-    """Widget for displaying the tags of a transaction."""
+# class TagButtons(Widget):
+#     """Widget for displaying the tags of a transaction."""
 
-    def __init__(self, tags: list[str]) -> None:
-        """Initialize the widget.
+#     def __init__(self, tags: list[str]) -> None:
+#         """Initialize the widget.
 
-        Args:
-            tags (list[str]): List of tags
-        """
+#         Args:
+#             tags (list[str]): List of tags
+#         """
 
-        super().__init__()
-        self.tags = tags
-        self.id = "tag_buttons"
+#         super().__init__()
+#         self.tags = tags
+#         self.id = "tag_buttons"
 
-    def compose(self) -> ComposeResult:
-        """Compose the widget."""
-        for tag in self.tags:
-            button = Button(f"{tag}", id=f"tag_button_{tag}", name=tag)
-            button.can_focus = False
-            yield button
+#     def compose(self) -> ComposeResult:
+#         """Compose the widget."""
+#         for tag in self.tags:
+#             button = Button(f"{tag}", id=f"tag_button_{tag}", name=tag)
+#             button.can_focus = False
+#             yield button
 
 
 class TransactionDetailScreen(ModalScreen):
@@ -102,8 +102,8 @@ class TransactionDetailScreen(ModalScreen):
         """Compose the widgets."""
         with self.vertical:
             yield self.markdown_widget
-            yield Label("Tags (click to remove)")
-            yield TagButtons(sorted(self.transaction.tags))
+            # yield Label("Tags (click to remove)")
+            # yield TagButtons(sorted(self.transaction.tags))
 
     def on_key(self, key: events.Key) -> None:
         """Handle keypress events."""
