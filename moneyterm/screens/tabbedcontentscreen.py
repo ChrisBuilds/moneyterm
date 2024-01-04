@@ -166,6 +166,7 @@ class TabbedContentScreen(Screen):
         self.query_one(OverviewWidget).refresh_tables()
         self.query_one(Budgeter).update_budgets_table()
         self.query_one(TrendSelector).handle_labels_updated()
+        self.query_one(Config).refresh_config()
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """
