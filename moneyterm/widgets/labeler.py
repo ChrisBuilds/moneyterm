@@ -372,7 +372,7 @@ class Labeler(Widget):
         self.post_message(self.LabelsUpdated())
 
     def on_transaction_table_row_sent(self, message: TransactionTable.RowSent) -> None:
-        transaction = self.ledger.get_tx_by_txid(message.tx_id)
+        transaction = self.ledger.get_tx_by_txid(message.account_number, message.txid)
         self.start_date_input.value = transaction.date.strftime("%m/%d/%Y")
         self.end_date_input.value = transaction.date.strftime("%m/%d/%Y")
         self.memo_input.value = transaction.memo
@@ -587,7 +587,7 @@ class Labeler(Widget):
 
     def scan_and_update_transactions(self) -> None:
         """Scan all transactions and update their labels."""
-        for txid, transaction in self.ledger.transactions.items():
+        for account_txid, transaction in self.ledger.transactions.items():
             transaction.labels.bills.clear()
             transaction.labels.categories.clear()
             transaction.labels.incomes.clear()
@@ -596,7 +596,7 @@ class Labeler(Widget):
                     for match in self.labels[label_type][label]:
                         match_fields = self.labels[label_type][label][match]
                         if self.check_transaction_match(transaction, match_fields):
-                            self.ledger.add_label_to_tx(txid, label, label_type.lower())
+                            self.ledger.add_label_to_tx(account_txid[0], account_txid[1], label, label_type.lower())
                             if match_fields["alias"]:
                                 transaction.alias = match_fields["alias"]
         self.ledger.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
