@@ -167,6 +167,7 @@ class TabbedContentScreen(Screen):
         self.query_one(Budgeter).update_budgets_table()
         self.query_one(TrendSelector).handle_labels_updated()
         self.query_one(Config).refresh_config()
+        self.query_one(Labeler).scan_and_update_transactions()
 
     def on_scope_select_bar_scope_changed(self, message: ScopeSelectBar.ScopeChanged) -> None:
         """
@@ -200,6 +201,8 @@ class TabbedContentScreen(Screen):
         self.log("Labels updated.")
         self.overview_widget.refresh_tables()
         self.query_one(Budgeter).update_budgets_table()
+        for transaction_table in self.query(TransactionTable):
+            transaction_table.update_data()
 
     def on_labeler_label_removed(self, event: Labeler.LabelRemoved) -> None:
         """
