@@ -95,6 +95,20 @@ TabbedContentScreen #manage_type_select{
     width: auto;
 }
 
+#amount_field_bar {
+    column-span: 2;
+    width: 100%;
+}
+
+#amount_lower_bound_input {
+    width: 40%;
+    margin-right: 1;
+}
+
+#amount_upper_bound_input {
+    width: 40%;
+}
+
 #matches_label {
     width: 100%;
     text-align: center;

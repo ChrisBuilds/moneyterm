@@ -36,7 +36,8 @@ class MatchFields(TypedDict):
     memo_exact: bool
     payee: str
     payee_exact: bool
-    amount: str
+    amount_min: str
+    amount_max: str
     type: str
     match_name: str
     color: str
@@ -129,8 +130,8 @@ class Labeler(Widget):
         self.payee_input = Input(placeholder="Payee", id="payee_input", classes="match_field_input")
         self.payee_exact_match_checkbox = Checkbox("Exact", id="payee_exact_match_checkbox")
         self.amount_label = Label("Amount", id="amount_label")
-        self.amount_input = Input(
-            placeholder="Ex: 53.49",
+        self.amount_lower_bound_input = Input(
+            placeholder="min Ex: 53.49",
             restrict=r"[0-9\.\-]*",
             validators=[
                 Function(
@@ -139,7 +140,20 @@ class Labeler(Widget):
                 )
             ],
             valid_empty=True,
-            id="amount_input",
+            id="amount_lower_bound_input",
+            classes="match_field_input",
+        )
+        self.amount_upper_bound_input = Input(
+            placeholder="max Ex: 53.49",
+            restrict=r"[0-9\.\-]*",
+            validators=[
+                Function(
+                    self.validate_amount_is_decimal,
+                    "Amount must be number/decimal. Ex: 3, 3.01",
+                )
+            ],
+            valid_empty=True,
+            id="amount_upper_bound_input",
             classes="match_field_input",
         )
         self.type_label = Label("Type", id="type_label")
@@ -209,7 +223,9 @@ class Labeler(Widget):
 
             # row 7
             yield self.amount_label
-            yield self.amount_input
+            with Horizontal(id="amount_field_bar"):
+                yield self.amount_lower_bound_input
+                yield self.amount_upper_bound_input
             # row 8
             yield self.type_label
             yield self.type_input
@@ -306,7 +322,8 @@ class Labeler(Widget):
             "memo_exact": self.memo_exact_match_checkbox.value,
             "payee": self.payee_input.value,
             "payee_exact": self.payee_exact_match_checkbox.value,
-            "amount": self.amount_input.value,
+            "amount_min": self.amount_lower_bound_input.value,
+            "amount_max": self.amount_upper_bound_input.value,
             "type": self.type_input.value,
             "match_name": self.match_name_input.value,
             "color": self.color_input.value,
@@ -379,7 +396,8 @@ class Labeler(Widget):
         self.memo_exact_match_checkbox.value = False
         self.payee_input.value = transaction.payee
         self.payee_exact_match_checkbox.value = False
-        self.amount_input.value = str(transaction.amount)
+        self.amount_lower_bound_input.value = str(transaction.amount)
+        self.amount_upper_bound_input.value = str(transaction.amount)
         self.type_input.value = transaction.tx_type
 
     def get_match_fields(self) -> MatchFields:
@@ -390,7 +408,8 @@ class Labeler(Widget):
             "memo_exact": self.memo_exact_match_checkbox.value,
             "payee": self.payee_input.value,
             "payee_exact": self.payee_exact_match_checkbox.value,
-            "amount": self.amount_input.value,
+            "amount_min": self.amount_lower_bound_input.value,
+            "amount_max": self.amount_upper_bound_input.value,
             "type": self.type_input.value,
             "match_name": self.match_name_input.value,
             "color": self.color_input.value,
@@ -431,7 +450,7 @@ class Labeler(Widget):
         for match_field in (
             self.start_date_input,
             self.end_date_input,
-            self.amount_input,
+            self.amount_lower_bound_input,
         ):
             validation_result = match_field.validate(match_field.value)
             if validation_result is None or validation_result.is_valid:
@@ -446,7 +465,8 @@ class Labeler(Widget):
             [
                 not self.memo_input.value,
                 not self.payee_input.value,
-                not self.amount_input.value,
+                not self.amount_lower_bound_input.value,
+                not self.amount_upper_bound_input.value,
             ]
         ):
             self.notify(
@@ -519,7 +539,8 @@ class Labeler(Widget):
             self.memo_exact_match_checkbox.value = False
             self.payee_input.clear()
             self.payee_exact_match_checkbox.value = False
-            self.amount_input.clear()
+            self.amount_lower_bound_input.clear()
+            self.amount_upper_bound_input.clear()
             self.type_input.clear()
             self.match_name_input.clear()
             self.color_input.clear()
@@ -533,7 +554,8 @@ class Labeler(Widget):
         self.memo_exact_match_checkbox.value = match["memo_exact"]
         self.payee_input.value = match["payee"]
         self.payee_exact_match_checkbox.value = match["payee_exact"]
-        self.amount_input.value = str(match["amount"])
+        self.amount_lower_bound_input.value = str(match["amount_min"])
+        self.amount_upper_bound_input.value = str(match["amount_max"])
         self.type_input.value = match["type"]
         self.match_name_input.value = match["match_name"]
         self.color_input.value = match["color"]
@@ -576,8 +598,11 @@ class Labeler(Widget):
                 if match_fields["payee"] not in transaction.payee:
                     return False
         # check amount
-        if match_fields["amount"]:
-            if Decimal(match_fields["amount"]) != transaction.amount:
+        if match_fields["amount_min"]:
+            if transaction.amount < Decimal(match_fields["amount_min"]):
+                return False
+        if match_fields["amount_max"]:
+            if transaction.amount > Decimal(match_fields["amount_max"]):
                 return False
         # check type
         if match_fields["type"]:
