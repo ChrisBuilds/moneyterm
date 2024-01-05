@@ -291,6 +291,7 @@ class Labeler(Widget):
             self.post_message(self.LabelRemoved(removed_label=self.selected_label))
             self.write_labels_json()
             self.update_label_select()
+            self.scan_and_update_transactions()
 
     @on(Button.Pressed, "#rename_label_button")
     def on_rename_label_button_press(self, event: Button.Pressed) -> None:
@@ -307,6 +308,7 @@ class Labeler(Widget):
         self.labels[self.selected_type][new_label_name] = self.labels[self.selected_type].pop(self.selected_label)
         self.write_labels_json()
         self.update_label_select(set_selection=new_label_name)
+        self.scan_and_update_transactions()
         self.post_message(self.LabelRenamed(old_label=old_label, new_label=new_label_name))
 
     @on(Button.Pressed, "#save_button")
@@ -355,6 +357,7 @@ class Labeler(Widget):
             self.labels[self.selected_type][self.selected_label].pop(self.selected_match_option.id)
             self.write_labels_json()
             self.update_match_options_list()
+            self.scan_and_update_transactions()
 
     @on(Button.Pressed, "#preview_button")
     def on_preview_button_press(self, event: Button.Pressed) -> None:
@@ -383,10 +386,6 @@ class Labeler(Widget):
     @on(Button.Pressed, "#scan_and_update_button")
     def on_scan_and_update_button_press(self, event: Button.Pressed) -> None:
         self.scan_and_update_transactions()
-        for transaction_table in self.app.query("TransactionTable"):
-            if isinstance(transaction_table, TransactionTable):
-                transaction_table.update_data()
-        self.post_message(self.LabelsUpdated())
 
     def on_transaction_table_row_sent(self, message: TransactionTable.RowSent) -> None:
         transaction = self.ledger.get_tx_by_txid(message.account_number, message.txid)
@@ -612,7 +611,7 @@ class Labeler(Widget):
 
     def scan_and_update_transactions(self) -> None:
         """Scan all transactions and update their labels."""
-        for account_txid, transaction in self.ledger.transactions.items():
+        for transaction in self.ledger.get_all_tx():
             transaction.labels.bills.clear()
             transaction.labels.categories.clear()
             transaction.labels.incomes.clear()
@@ -621,7 +620,11 @@ class Labeler(Widget):
                     for match in self.labels[label_type][label]:
                         match_fields = self.labels[label_type][label][match]
                         if self.check_transaction_match(transaction, match_fields):
-                            self.ledger.add_label_to_tx(account_txid[0], account_txid[1], label, label_type.lower())
+                            self.ledger.add_label_to_tx(
+                                transaction.account.number, transaction.txid, label, label_type.lower()
+                            )
                             if match_fields["alias"]:
                                 transaction.alias = match_fields["alias"]
+        self.notify(f"All transaction labels updated.", title="Scan and Update Complete", timeout=7)
         self.ledger.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
+        self.post_message(self.LabelsUpdated())
