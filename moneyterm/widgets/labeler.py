@@ -626,5 +626,5 @@ class Labeler(Widget):
                             if match_fields["alias"]:
                                 transaction.alias = match_fields["alias"]
         self.notify(f"All transaction labels updated.", title="Scan and Update Complete", timeout=7)
-        self.ledger.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
+        self.ledger.save_ledger_pkl()
         self.post_message(self.LabelsUpdated())
