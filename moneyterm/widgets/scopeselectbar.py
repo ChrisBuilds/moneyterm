@@ -31,7 +31,6 @@ class ScopeSelectBar(Widget):
         super().__init__()
         self.ledger = ledger
         self.account_select: Select[str] = Select([], id="account_select")
-        self.account_aliases: dict[str, str] = {}
         self.year_select: Select[int] = Select([], id="year_select")
         self.month_select: Select[int] = Select([], id="month_select")
 
@@ -45,32 +44,18 @@ class ScopeSelectBar(Widget):
             yield self.month_select
 
     def on_mount(self) -> None:
-        self.load_config_json()
         self.refresh_all_selects()
-
-    def load_config_json(self) -> None:
-        try:
-            with open(Path("moneyterm/data/config.json"), "r") as f:
-                config = json.load(f)
-        except FileNotFoundError as e:
-            config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
-        except json.decoder.JSONDecodeError as e:
-            config = {"import_directory": "", "import_extension": "", "account_aliases": {}}
-        if "account_aliases" in config and isinstance(config["account_aliases"], dict):
-            for account, alias in config["account_aliases"].items():
-                self.account_aliases[account] = alias
 
     def refresh_all_selects(self) -> None:
         """Reload all selects."""
-        self.load_config_json()
         accounts = self.ledger.accounts
         if accounts:
             account_options = []
-            for account in accounts:
-                if account in self.account_aliases:
-                    account_options.append((self.account_aliases[account], account))
+            for account in accounts.values():
+                if account.alias:
+                    account_options.append((account.alias, account.number))
                 else:
-                    account_options.append((account, account))
+                    account_options.append((account.number, account.number))
             self.account_select.set_options(account_options)
             self.refresh_year_month_selects()
         else:
