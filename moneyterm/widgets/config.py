@@ -153,7 +153,11 @@ class Config(Widget):
             ):
                 self.config["account_aliases"][self.alias_account_select.value] = f"{self.alias_account_input.value}"
         self.write_config_json()
+        self.notify("Config saved.", severity="information", timeout=5, title="Config Saved")
+        for account in self.config["account_aliases"]:
+            self.ledger.add_account_alias(account, self.config["account_aliases"].get(account, ""))  # type: ignore
         self.post_message(self.ConfigUpdated())
+        self.ledger.save_ledger_pkl()
 
     @on(Select.Changed, "#alias_account_select")
     def on_alias_account_select_change(self, event: Select.Changed) -> None:
