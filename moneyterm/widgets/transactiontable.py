@@ -16,14 +16,16 @@ from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 
 
 class TransactionTable(DataTable):
-    account: reactive[str | NoSelection] = reactive(NoSelection)
-    year: reactive[int | NoSelection] = reactive(NoSelection)
-    month: reactive[int | NoSelection] = reactive(NoSelection)
-
     class RowSent(Message):
         def __init__(self, row_key: str) -> None:
             super().__init__()
             self.account_number, self.txid = row_key.split(":")
+
+    account: reactive[str | NoSelection] = reactive(NoSelection)
+    year: reactive[int | NoSelection] = reactive(NoSelection)
+    month: reactive[int | NoSelection] = reactive(NoSelection)
+
+    BINDINGS = [("c", "quick_category", "Quick Category")]
 
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
@@ -75,15 +77,7 @@ class TransactionTable(DataTable):
         self.add_columns_from_labels()
 
     def on_key(self, key: events.Key) -> None:
-        # def get_selected_category(category: str):
-        #     if category:
-        #         self.apply_category_to_selected_transaction(category)
-        #         update_row_categories()
-
-        # if key.key == "t":
-        #     if self.selected_row_key:
-        #         selected_transaction = self.ledger.get_tx_by_txid(self.selected_row_key)
-        #         self.app.push_screen(QuickCategoryScreen(self.ledger, selected_transaction), get_selected_category)
+        # todo: make these bindings
         if key.key == "i":
             if self.selected_row_key:
                 self.log(f"Showing transaction details for {self.selected_row_key}")
@@ -94,6 +88,21 @@ class TransactionTable(DataTable):
         elif key.key == "I":
             if self.selected_row_key:
                 self.post_message(self.RowSent(self.selected_row_key))
+
+    def action_quick_category(self) -> None:
+        if self.selected_row_key:
+            account_number, txid = self.selected_row_key.split(":")
+            transaction = self.ledger.get_tx_by_txid(account_number, txid)
+            self.app.push_screen(QuickCategoryScreen(self.ledger, transaction))
+
+    def quick_add_category(self, category: str) -> None:
+        pass
+        # if self.selected_row_key:
+        #     account_number, txid = self.selected_row_key.split(":")
+        #     transaction = self.ledger.get_tx_by_txid(account_number, txid)
+        #     transaction.labels.categories.append(category)
+        #     self.ledger.save_ledger_pkl()
+        #     self.update_data()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self.selected_row_key = event.row_key.value
