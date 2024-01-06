@@ -159,7 +159,7 @@ class TabbedContentScreen(Screen):
             title="Import Complete",
             timeout=7,
         )
-        self.ledger.save_ledger_pkl(Path("moneyterm/data/ledger.pkl"))
+        self.ledger.save_ledger_pkl()
         self.query_one(ScopeSelectBar).refresh_all_selects()
         for transaction_table in self.query(TransactionTable):
             transaction_table.update_data()
