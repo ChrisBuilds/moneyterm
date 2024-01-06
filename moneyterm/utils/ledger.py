@@ -93,8 +93,9 @@ class Ledger:
     def __init__(self) -> None:
         self.accounts: dict[str, Account] = dict()
         self.transactions: dict[tuple[str, str], Transaction] = dict()
+        self.pickle_path = Path("moneyterm/data/ledger.pkl")
 
-    def read_ledger_pkl(self, pkl_file: Path) -> str:
+    def read_ledger_pkl(self) -> str:
         """Read the accounts and transactions dicts from a pickle file.
 
         Args:
@@ -103,16 +104,16 @@ class Ledger:
         Returns:
             str: "success", "failure" or "not found"
         """
-        if not pkl_file.exists():
+        if not self.pickle_path.exists():
             return "not found"
         try:
-            with open(pkl_file, "rb") as f:
+            with open(self.pickle_path, "rb") as f:
                 self.accounts, self.transactions = pickle.load(f)
             return "success"
         except:
             return "failure"
 
-    def save_ledger_pkl(self, pkl_file: Path) -> str:
+    def save_ledger_pkl(self) -> str:
         """Save the accounts and transactions dicts to a pickle file.
 
         Args:
@@ -122,11 +123,11 @@ class Ledger:
             str: "success" or "failure"
         """
         try:
-            with open(pkl_file, "wb") as f:
+            with open(self.pickle_path, "wb") as f:
                 pickle.dump((self.accounts, self.transactions), f)
             return "success"
         except:
-            return "failure"
+            raise
 
     def load_ofx_data(self, data_file: Path) -> dict[str, int]:
         """Load OFX data from a file.
@@ -161,6 +162,7 @@ class Ledger:
                     load_results["transactions_added"] += 1
                 else:
                     load_results["transactions_ignored"] += 1
+        self.save_ledger_pkl()
         return load_results
 
     def find_dates_with_tx_activity(self, account_number: str | None = None) -> defaultdict[int, set[tuple[int, str]]]:
@@ -296,3 +298,13 @@ class Ledger:
             if label in all_labels:
                 tx_with_label.append(tx)
         return tx_with_label
+
+    def add_account_alias(self, account_number: str, alias: str) -> None:
+        """Add an alias to an account.
+
+        Args:
+            account_number (str): Account number
+            alias (str): Alias
+        """
+        if account_number in self.accounts:
+            self.accounts[account_number].alias = alias
