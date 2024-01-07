@@ -330,7 +330,14 @@ class Ledger:
         """
         tx_with_label: list[Transaction] = []
         for tx in self.transactions.values():
-            all_labels = tx.auto_labels.bills + tx.auto_labels.categories + tx.auto_labels.incomes
+            all_labels = (
+                tx.auto_labels.bills
+                + tx.auto_labels.categories
+                + tx.auto_labels.incomes
+                + tx.manual_labels.bills
+                + tx.manual_labels.categories
+                + tx.manual_labels.incomes
+            )
             if label in all_labels:
                 tx_with_label.append(tx)
         return tx_with_label
