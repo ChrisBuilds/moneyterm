@@ -80,11 +80,11 @@ class OverviewWidget(Widget):
         income_tx_by_source: dict[str, list[Transaction]] = {}
         bill_tx_by_source: dict[str, list[Transaction]] = {}
         for transaction in transactions:
-            for source_label in transaction.labels.incomes:
+            for source_label in transaction.auto_labels.incomes:
                 if source_label not in income_tx_by_source:
                     income_tx_by_source[source_label] = list()
                 income_tx_by_source[source_label].append(transaction)
-            for source_label in transaction.labels.bills:
+            for source_label in transaction.auto_labels.bills:
                 if source_label not in bill_tx_by_source:
                     bill_tx_by_source[source_label] = list()
                 bill_tx_by_source[source_label].append(transaction)
