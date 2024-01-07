@@ -73,7 +73,7 @@ class Transaction:
         tx_type (str): The type of transaction.
         amount (Decimal): The amount of the transaction.
         account_number (str): The account number associated with the transaction.
-        labels (Labels): The labels associated with the transaction.
+        auto_labels (Labels): The labels associated with the transaction.
         tags (list[str]): Additional tags for the transaction.
     """
 
@@ -84,8 +84,8 @@ class Transaction:
     tx_type: str
     amount: Decimal
     account: Account
-    labels: Labels
-    tags: list[str] = field(default_factory=list)
+    auto_labels: Labels
+    manual_labels: Labels
     alias: str = ""
 
 
@@ -157,7 +157,8 @@ class Ledger:
                         tx_type=tx.type,
                         amount=tx.amount,
                         account=self.accounts[account.number],
-                        labels=Labels(),
+                        auto_labels=Labels(),
+                        manual_labels=Labels(),
                     )
                     load_results["transactions_added"] += 1
                 else:
@@ -252,36 +253,71 @@ class Ledger:
         ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
-    def add_label_to_tx(self, account_number: str, txid: str, label_str: str, label_type: str) -> None:
+    def add_label_to_tx(self, account_number: str, txid: str, label_str: str, label_type: str, auto=True) -> None:
         """Add a label to a transaction.
 
         Args:
             txid (str): Transaction ID
             label_str (str): Label to add
             label_type (str): Type of label to add
+            auto (bool, optional): Whether the label is automatically generated. Defaults to True.
         """
         if label_type == "bills":
-            if label_str not in self.transactions[(account_number, txid)].labels.bills:
-                self.transactions[(account_number, txid)].labels.bills.append(label_str)
-                self.transactions[(account_number, txid)].labels.bills.sort()
+            auto_labels = self.transactions[(account_number, txid)].auto_labels.bills
+            manual_labels = self.transactions[(account_number, txid)].manual_labels.bills
         elif label_type == "categories":
-            if label_str not in self.transactions[(account_number, txid)].labels.categories:
-                self.transactions[(account_number, txid)].labels.categories.append(label_str)
-                self.transactions[(account_number, txid)].labels.categories.sort()
+            auto_labels = self.transactions[(account_number, txid)].auto_labels.categories
+            manual_labels = self.transactions[(account_number, txid)].manual_labels.categories
         elif label_type == "incomes":
-            if label_str not in self.transactions[(account_number, txid)].labels.incomes:
-                self.transactions[(account_number, txid)].labels.incomes.append(label_str)
-                self.transactions[(account_number, txid)].labels.incomes.sort()
+            auto_labels = self.transactions[(account_number, txid)].auto_labels.incomes
+            manual_labels = self.transactions[(account_number, txid)].manual_labels.incomes
 
-    def remove_category_from_tx(self, account_number: str, txid: str, category_str: str):
-        """Remove a category from a transaction.
+        if label_str not in auto_labels and label_str not in manual_labels:
+            if auto:
+                auto_labels.append(label_str)
+                auto_labels.sort()
+            else:
+                manual_labels.append(label_str)
+                manual_labels.sort()
+
+    def remove_label_from_tx(self, account_number: str, txid: str, label_str: str) -> None:
+        transaction = self.get_tx_by_txid(account_number, txid)
+        for label_list in (
+            transaction.manual_labels.bills,
+            transaction.manual_labels.categories,
+            transaction.manual_labels.incomes,
+        ):
+            if label_str in label_list:
+                label_list.remove(label_str)
+                label_list.sort()
+
+    def remove_label(self, label: str) -> None:
+        """Removes a label from all transactions manual_labels. Labels in auto_labels will be automatically
+        updated on the next call to Labeler.scan_and_update_transactions().
 
         Args:
-            txid (str): Transaction ID
-            category_str (str): Category to remove
+            label (str): Label to remove
         """
-        if category_str in self.transactions[(account_number, txid)].labels.categories:
-            self.transactions[(account_number, txid)].labels.categories.remove(category_str)
+        for tx in self.get_all_tx():
+            for label_list in (tx.manual_labels.bills, tx.manual_labels.categories, tx.manual_labels.incomes):
+                if label in label_list:
+                    label_list.remove(label)
+                    label_list.sort()
+
+    def rename_label(self, old_label: str, new_label: str) -> None:
+        """Renames labels in the manual_labels labels. Labels in auto_labels will be automatically
+        updated on the next call to Labeler.scan_and_update_transactions().
+
+        Args:
+            old_label (str): Old label
+            new_label (str): New label
+        """
+        for tx in self.get_all_tx():
+            for label_list in (tx.manual_labels.bills, tx.manual_labels.categories, tx.manual_labels.incomes):
+                if old_label in label_list:
+                    label_list.remove(old_label)
+                    label_list.append(new_label)
+                    label_list.sort()
 
     def get_all_tx_with_label(self, label: str) -> list[Transaction]:
         """Get all transactions with a given label.
@@ -294,7 +330,7 @@ class Ledger:
         """
         tx_with_label: list[Transaction] = []
         for tx in self.transactions.values():
-            all_labels = tx.labels.bills + tx.labels.categories + tx.labels.incomes
+            all_labels = tx.auto_labels.bills + tx.auto_labels.categories + tx.auto_labels.incomes
             if label in all_labels:
                 tx_with_label.append(tx)
         return tx_with_label
