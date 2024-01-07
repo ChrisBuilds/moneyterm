@@ -29,26 +29,26 @@ from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
 from pathlib import Path
 
 
-# class TagButtons(Widget):
-#     """Widget for displaying the tags of a transaction."""
+class ManualLabelButtons(Widget):
+    """Widget for displaying the manual labels of a transaction."""
 
-#     def __init__(self, tags: list[str]) -> None:
-#         """Initialize the widget.
+    def __init__(self, tx: Transaction) -> None:
+        """Initialize the widget.
 
-#         Args:
-#             tags (list[str]): List of tags
-#         """
+        Args:
+            tx (Transaction): Transaction object
+        """
 
-#         super().__init__()
-#         self.tags = tags
-#         self.id = "tag_buttons"
+        super().__init__()
+        self.manual_labels = tx.manual_labels.bills + tx.manual_labels.categories + tx.manual_labels.incomes
+        self.id = "manual_label_buttons"
 
-#     def compose(self) -> ComposeResult:
-#         """Compose the widget."""
-#         for tag in self.tags:
-#             button = Button(f"{tag}", id=f"tag_button_{tag}", name=tag)
-#             button.can_focus = False
-#             yield button
+    def compose(self) -> ComposeResult:
+        """Compose the widget."""
+        for label in self.manual_labels:
+            button = Button(f"{label}", id=f"manual_label_button_{label}", name=label)
+            button.can_focus = False
+            yield button
 
 
 class TransactionDetailScreen(ModalScreen):
@@ -65,6 +65,7 @@ class TransactionDetailScreen(ModalScreen):
         super().__init__()
         self.ledger = ledger
         self.transaction = transaction
+        self.label_removed = False
         self.id = "transaction_detail_screen"
         self.vertical = Vertical()
         self.markdown = f"""**Transaction ID** : {self.transaction.txid}
@@ -74,6 +75,8 @@ class TransactionDetailScreen(ModalScreen):
 **Memo** : {self.transaction.memo}
 
 **Payee** : {self.transaction.payee}
+
+**Transaction Alias** : {self.transaction.alias}
 
 **Type** : {self.transaction.tx_type}
 
@@ -85,14 +88,11 @@ class TransactionDetailScreen(ModalScreen):
 
 **Account Alias** : {self.transaction.account.alias}
 
-**Bills** : {','.join(self.transaction.labels.bills)}
+**Bills Auto-Labels** : {','.join(self.transaction.auto_labels.bills)}
 
-**Categories** : {','.join(self.transaction.labels.categories)}
+**Categories Auto-Labels** : {','.join(self.transaction.auto_labels.categories)}
 
-**Incomes** : {','.join(self.transaction.labels.incomes)}
-
-**Alias** : {self.transaction.alias}
-
+**Incomes Auto-Labels** : {','.join(self.transaction.auto_labels.incomes)}
 """
         self.markdown_widget = Markdown(self.markdown, id="transaction_detail_markdown")
         self.markdown_widget.styles.width = max(len(line) for line in self.markdown.splitlines())
@@ -102,18 +102,20 @@ class TransactionDetailScreen(ModalScreen):
         """Compose the widgets."""
         with self.vertical:
             yield self.markdown_widget
-            # yield Label("Tags (click to remove)")
-            # yield TagButtons(sorted(self.transaction.tags))
+            yield Label("Manual Labels (click to remove)")
+            yield ManualLabelButtons(self.transaction)
 
     def on_key(self, key: events.Key) -> None:
         """Handle keypress events."""
         close_screen_keys = ("escape", "q", "i")
         if key.key in close_screen_keys:
-            self.dismiss(None)
+            self.dismiss(self.label_removed)
 
-    # def on_button_pressed(self, pressed: Button.Pressed) -> None:
-    #     """Remove the tag corresponding to the pressed button."""
-    #     tag_to_remove = pressed.button.name
-    #     if tag_to_remove:
-    #         self.ledger.remove_tag_from_tx(self.transaction, tag_to_remove)
-    #     pressed.button.remove()
+    def on_button_pressed(self, pressed: Button.Pressed) -> None:
+        """Remove the manual label corresponding to the pressed button."""
+        label_to_remove = pressed.button.name
+        if label_to_remove:
+            self.ledger.remove_label_from_tx(self.transaction.account.number, self.transaction.txid, label_to_remove)
+            self.label_removed = True
+        pressed.button.remove()
+        self.ledger.save_ledger_pkl()
