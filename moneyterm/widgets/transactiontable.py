@@ -11,7 +11,7 @@ from textual.widgets import (
     DataTable,
 )
 from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
+from moneyterm.screens.quickcategoryscreen import QuickLabelScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 
 
@@ -21,7 +21,7 @@ class TransactionTable(DataTable):
             super().__init__()
             self.account_number, self.txid = row_key.split(":")
 
-    class QuickCategoryChanged(Message):
+    class QuickLabelChanged(Message):
         def __init__(self) -> None:
             super().__init__()
 
@@ -30,7 +30,7 @@ class TransactionTable(DataTable):
     month: reactive[int | NoSelection] = reactive(NoSelection)
 
     BINDINGS = [
-        ("c", "quick_category", "Quick Category"),
+        ("c", "quick_label", "Quick Label"),
         ("i", "transaction_details", "Transaction Details"),
         ("ctrl+l", "send_to_labeler", "Send to Labeler"),
     ]
@@ -109,27 +109,28 @@ class TransactionTable(DataTable):
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
             self.app.push_screen(
                 TransactionDetailScreen(self.ledger, transaction),
-                self.category_removed,
+                self.label_removed,
             )
 
-    def action_quick_category(self) -> None:
+    def action_quick_label(self) -> None:
         if self.selected_row_key:
             account_number, txid = self.selected_row_key.split(":")
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
-            self.app.push_screen(QuickCategoryScreen(self.ledger, transaction), self.quick_add_category)
+            self.app.push_screen(QuickLabelScreen(self.ledger, transaction), self.quick_add_label)
 
-    def category_removed(self, label_removed: bool) -> None:
+    def label_removed(self, label_removed: bool) -> None:
         if label_removed:
             self.update_data()
-            self.post_message(self.QuickCategoryChanged())
+            self.post_message(self.QuickLabelChanged())
 
-    def quick_add_category(self, category: str) -> None:
+    def quick_add_label(self, label_info: tuple[str, str]) -> None:
         if self.selected_row_key:
+            label, label_type = label_info
             account_number, txid = self.selected_row_key.split(":")
-            self.ledger.add_label_to_tx(account_number, txid, category, "categories", auto=False)
+            self.ledger.add_label_to_tx(account_number, txid, label, label_type, auto=False)
             self.ledger.save_ledger_pkl()
             self.update_data()
-            self.post_message(self.QuickCategoryChanged())
+            self.post_message(self.QuickLabelChanged())
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self.selected_row_key = event.row_key.value

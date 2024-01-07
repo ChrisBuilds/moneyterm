@@ -262,13 +262,13 @@ class Ledger:
             label_type (str): Type of label to add
             auto (bool, optional): Whether the label is automatically generated. Defaults to True.
         """
-        if label_type == "bills":
+        if label_type == "Bills":
             auto_labels = self.transactions[(account_number, txid)].auto_labels.bills
             manual_labels = self.transactions[(account_number, txid)].manual_labels.bills
-        elif label_type == "categories":
+        elif label_type == "Categories":
             auto_labels = self.transactions[(account_number, txid)].auto_labels.categories
             manual_labels = self.transactions[(account_number, txid)].manual_labels.categories
-        elif label_type == "incomes":
+        elif label_type == "Incomes":
             auto_labels = self.transactions[(account_number, txid)].auto_labels.incomes
             manual_labels = self.transactions[(account_number, txid)].manual_labels.incomes
 

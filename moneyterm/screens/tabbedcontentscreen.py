@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
 from textual.app import ComposeResult
+from textual.types import NoSelection
 from textual.screen import Screen
 from textual.widgets import (
     Header,
@@ -16,6 +17,7 @@ from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
 from moneyterm.widgets.config import Config
+
 
 DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}}
 
@@ -37,6 +39,9 @@ class TabbedContentScreen(Screen):
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
         self.ledger = ledger
+        self.selected_account: str | NoSelection = NoSelection()
+        self.selected_year: int | NoSelection = NoSelection()
+        self.selected_month: int | NoSelection = NoSelection()
 
     def compose(self) -> ComposeResult:
         """
@@ -181,6 +186,9 @@ class TabbedContentScreen(Screen):
 
         """
         self.log(f"Scope changed: {message.account}, {message.year}, {message.month}")
+        self.selected_account = message.account
+        self.selected_year = message.year
+        self.selected_month = message.month
         for transaction_table in self.query(TransactionTable):
             transaction_table.account = message.account
             transaction_table.year = message.year
@@ -281,9 +289,9 @@ class TabbedContentScreen(Screen):
         self.import_transactions()
         self.log("Transactions imported.")
 
-    def on_transaction_table_quick_category_changed(self, event: TransactionTable.QuickCategoryChanged) -> None:
+    def on_transaction_table_quick_label_changed(self, event: TransactionTable.QuickLabelChanged) -> None:
         """
-        Event handler for when a transaction label is added via the quick category screen.
+        Event handler for when a transaction label is added or removed via the quick label screen/transaction details screen.
 
         Args:
             event (TransactionTable.QuickCategoryChanged): The event object.
@@ -293,3 +301,4 @@ class TabbedContentScreen(Screen):
 
         """
         self.query_one(Budgeter).update_budgets_table()
+        self.overview_widget.update_tables(self.selected_account, self.selected_year, self.selected_month)

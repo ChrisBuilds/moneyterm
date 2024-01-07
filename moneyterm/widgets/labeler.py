@@ -273,7 +273,10 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#create_new_label_button")
     def on_create_new_label_button_press(self, event: Button.Pressed) -> None:
-        self.app.push_screen(AddLabelScreen(list(self.labels[self.selected_type])), self.create_new_label)
+        all_labels = []
+        for label_type in self.labels:
+            all_labels.extend(list(self.labels[label_type]))
+        self.app.push_screen(AddLabelScreen(list(all_labels)), self.create_new_label)
 
     @on(Button.Pressed, "#remove_label_button")
     def on_remove_label_button_press(self, event: Button.Pressed) -> None:
@@ -400,9 +403,7 @@ class Labeler(Widget):
                     for match in self.labels[label_type][label]:
                         match_fields = self.labels[label_type][label][match]
                         if self.check_transaction_match(transaction, match_fields):
-                            self.ledger.add_label_to_tx(
-                                transaction.account.number, transaction.txid, label, label_type.lower()
-                            )
+                            self.ledger.add_label_to_tx(transaction.account.number, transaction.txid, label, label_type)
                             if match_fields["alias"]:
                                 transaction.alias = match_fields["alias"]
         self.notify(f"All transaction labels updated.", title="Scan and Update Complete", timeout=7)

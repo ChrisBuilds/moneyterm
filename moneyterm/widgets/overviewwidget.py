@@ -32,7 +32,7 @@ from rich.table import Table
 from rich.text import Text
 from textual.containers import Horizontal, Grid, VerticalScroll
 from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.screens.quickcategoryscreen import QuickCategoryScreen
+from moneyterm.screens.quickcategoryscreen import QuickLabelScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 from moneyterm.screens.addlabelscreen import AddLabelScreen
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
@@ -80,11 +80,11 @@ class OverviewWidget(Widget):
         income_tx_by_source: dict[str, list[Transaction]] = {}
         bill_tx_by_source: dict[str, list[Transaction]] = {}
         for transaction in transactions:
-            for source_label in transaction.auto_labels.incomes:
+            for source_label in transaction.auto_labels.incomes + transaction.manual_labels.incomes:
                 if source_label not in income_tx_by_source:
                     income_tx_by_source[source_label] = list()
                 income_tx_by_source[source_label].append(transaction)
-            for source_label in transaction.auto_labels.bills:
+            for source_label in transaction.auto_labels.bills + transaction.manual_labels.bills:
                 if source_label not in bill_tx_by_source:
                     bill_tx_by_source[source_label] = list()
                 bill_tx_by_source[source_label].append(transaction)

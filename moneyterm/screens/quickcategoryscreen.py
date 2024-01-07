@@ -27,14 +27,14 @@ from pathlib import Path
 import json
 
 
-class QuickCategoryScreen(ModalScreen):
-    """Screen for selecting a category from a list of all categories in the ledger. Categories are filtered by the input field.
+class QuickLabelScreen(ModalScreen):
+    """Screen for selecting a label from a list of all labels in the ledger. Labels are filtered by the input field.
 
     Args:
         Screen (textual.screen.Screen): Screen class
     """
 
-    CSS_PATH = "../tcss/quickcategoryscreen.tcss"
+    CSS_PATH = "../tcss/quicklabelscreen.tcss"
 
     def __init__(self, ledger: Ledger, transaction: Transaction) -> None:
         """Initialize the screen.
@@ -44,50 +44,59 @@ class QuickCategoryScreen(ModalScreen):
         """
         super().__init__()
         self.ledger = ledger
-        self.categories: list[str] = []
+        self.labels: list[str] = []
+        self.label_types_map: dict[str, str] = {}
         self.transaction = transaction
         self.vertical_scroll = VerticalScroll()
         self.vertical_scroll.can_focus = False
-        self.vertical_scroll.border_title = "Quick Category"
+        self.vertical_scroll.border_title = "Quick Label"
 
     def compose(self) -> ComposeResult:
-        self.category_list: OptionList = OptionList(id="category_list")
+        self.label_list: OptionList = OptionList(id="label_list")
         with self.vertical_scroll:
-            yield Input(placeholder="Search Categories", id="category_search_input")
+            yield Input(placeholder="Search Labels", id="labels_search_input")
             yield Rule()
-            yield Label("Available Categories")
-            yield self.category_list
+            yield Label("Available Labels", id="available_labels_label")
+            yield self.label_list
 
     def on_mount(self) -> None:
         try:
             with open(Path("moneyterm/data/labels.json"), "r") as f:
-                self.categories.extend(sorted(json.load(f)["Categories"], key=str.lower))
+                labels = json.load(f)
+                for label_type in ("Bills", "Categories", "Incomes"):
+                    for label in labels[label_type]:
+                        self.label_types_map[label] = label_type
+                self.labels.extend(labels["Bills"])
+                self.labels.extend(labels["Categories"])
+                self.labels.extend(labels["Incomes"])
+                self.labels.sort(key=lambda x: x.lower())
+
         except FileNotFoundError:
             pass
-        if not self.categories:
-            self.category_list.add_options(["No categories found."])
-            self.category_list.disabled = True
+        if not self.labels:
+            self.label_list.add_options(["No labels found."])
+            self.label_list.disabled = True
         else:
-            self.category_list.add_options(self.categories)
-        self.query_one("#category_search_input").focus()
+            self.label_list.add_options(self.labels)
+        self.query_one("#labels_search_input").focus()
 
     def on_key(self, key: events.Key) -> None:
         if key.key == "escape":
             self.app.pop_screen()
         elif key.key == "enter":
-            self.category_list.action_select()
+            self.label_list.action_select()
 
     def on_input_changed(self, event: Input.Changed) -> None:
-        self.category_list.clear_options()
-        self.category_list.add_options(
-            [category for category in self.categories if event.value.lower() in category.lower()]
-        )
-        self.category_list.action_first()
+        self.label_list.clear_options()
+        self.label_list.add_options([label for label in self.labels if event.value.lower() in label.lower()])
+        self.label_list.action_first()
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        """Dismiss the screen and return the selected category via the callback.
+        """Dismiss the screen and return the selected label via the callback.
 
         Args:
-            event (OptionList.OptionSelected): Event containing the selected category.
+            event (OptionList.OptionSelected): Event containing the selected label.
         """
-        self.dismiss(event.option.prompt)
+        selected_label = str(event.option.prompt)
+        selected_label_type = self.label_types_map[selected_label]
+        self.dismiss((selected_label, selected_label_type))
