@@ -16,12 +16,12 @@ Markdown{
     background: $primary-background;
 }
 
-#tag_buttons {
+#manual_label_buttons {
     layout: horizontal;
     height: auto;
 }
 
-#tag_buttons Button{
+#manual_label_buttons Button{
     width: auto;
     min-width: 0;
     height: auto;
