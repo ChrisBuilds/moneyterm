@@ -25,7 +25,11 @@ class TransactionTable(DataTable):
     year: reactive[int | NoSelection] = reactive(NoSelection)
     month: reactive[int | NoSelection] = reactive(NoSelection)
 
-    BINDINGS = [("c", "quick_category", "Quick Category")]
+    BINDINGS = [
+        ("c", "quick_category", "Quick Category"),
+        ("i", "transaction_details", "Transaction Details"),
+        ("ctrl+l", "send_to_labeler", "Send to Labeler"),
+    ]
 
     def __init__(self, ledger: Ledger) -> None:
         super().__init__()
@@ -58,10 +62,24 @@ class TransactionTable(DataTable):
             return
         for tx in self.ledger.get_tx_by_month(self.account, self.year, self.month):
             self.add_transaction_row(tx)
+        if self.selected_row_key:
+            try:
+                self.move_cursor(row=self.get_row_index(self.selected_row_key))
+            except:
+                pass
 
     def add_transaction_row(self, tx: Transaction) -> None:
         self.cursor_type = "row"
-        labels = ",".join(sorted(tx.labels.bills + tx.labels.categories + tx.labels.incomes))
+        labels = ",".join(
+            sorted(
+                tx.auto_labels.bills
+                + tx.auto_labels.categories
+                + tx.auto_labels.incomes
+                + tx.manual_labels.bills
+                + tx.manual_labels.categories
+                + tx.manual_labels.incomes
+            )
+        )
         self.add_row(
             tx.date.strftime("%Y-%m-%d"),
             tx.alias if tx.alias else tx.payee,
@@ -76,33 +94,32 @@ class TransactionTable(DataTable):
         """Mount the datatable."""
         self.add_columns_from_labels()
 
-    def on_key(self, key: events.Key) -> None:
-        # todo: make these bindings
-        if key.key == "i":
-            if self.selected_row_key:
-                self.log(f"Showing transaction details for {self.selected_row_key}")
-                account_number, txid = self.selected_row_key.split(":")
-                transaction = self.ledger.get_tx_by_txid(account_number, txid)
-                self.app.push_screen(TransactionDetailScreen(self.ledger, transaction))
+    def action_send_to_labeler(self) -> None:
+        if self.selected_row_key:
+            self.post_message(self.RowSent(self.selected_row_key))
 
-        elif key.key == "I":
-            if self.selected_row_key:
-                self.post_message(self.RowSent(self.selected_row_key))
+    def action_transaction_details(self) -> None:
+        if self.selected_row_key:
+            self.log(f"Showing transaction details for {self.selected_row_key}")
+            account_number, txid = self.selected_row_key.split(":")
+            transaction = self.ledger.get_tx_by_txid(account_number, txid)
+            self.app.push_screen(
+                TransactionDetailScreen(self.ledger, transaction),
+                lambda label_removed: self.update_data() if label_removed else None,
+            )
 
     def action_quick_category(self) -> None:
         if self.selected_row_key:
             account_number, txid = self.selected_row_key.split(":")
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
-            self.app.push_screen(QuickCategoryScreen(self.ledger, transaction))
+            self.app.push_screen(QuickCategoryScreen(self.ledger, transaction), self.quick_add_category)
 
     def quick_add_category(self, category: str) -> None:
-        pass
-        # if self.selected_row_key:
-        #     account_number, txid = self.selected_row_key.split(":")
-        #     transaction = self.ledger.get_tx_by_txid(account_number, txid)
-        #     transaction.labels.categories.append(category)
-        #     self.ledger.save_ledger_pkl()
-        #     self.update_data()
+        if self.selected_row_key:
+            account_number, txid = self.selected_row_key.split(":")
+            self.ledger.add_label_to_tx(account_number, txid, category, "categories", auto=False)
+            self.ledger.save_ledger_pkl()
+            self.update_data()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self.selected_row_key = event.row_key.value
