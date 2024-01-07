@@ -24,6 +24,7 @@ from textual.containers import Vertical, Horizontal, VerticalScroll, Middle
 from moneyterm.utils.ledger import Ledger, Transaction
 from moneyterm.utils.financedb import FinanceDB
 from pathlib import Path
+import json
 
 
 class QuickCategoryScreen(ModalScreen):
@@ -43,6 +44,7 @@ class QuickCategoryScreen(ModalScreen):
         """
         super().__init__()
         self.ledger = ledger
+        self.categories: list[str] = []
         self.transaction = transaction
         self.vertical_scroll = VerticalScroll()
         self.vertical_scroll.can_focus = False
@@ -57,8 +59,16 @@ class QuickCategoryScreen(ModalScreen):
             yield self.category_list
 
     def on_mount(self) -> None:
-        self.all_categories = self.ledger.get_all_categories().values()
-        self.category_list.add_options(self.all_categories)
+        try:
+            with open(Path("moneyterm/data/labels.json"), "r") as f:
+                self.categories.extend(sorted(json.load(f)["Categories"], key=str.lower))
+        except FileNotFoundError:
+            pass
+        if not self.categories:
+            self.category_list.add_options(["No categories found."])
+            self.category_list.disabled = True
+        else:
+            self.category_list.add_options(self.categories)
         self.query_one("#category_search_input").focus()
 
     def on_key(self, key: events.Key) -> None:
@@ -70,7 +80,7 @@ class QuickCategoryScreen(ModalScreen):
     def on_input_changed(self, event: Input.Changed) -> None:
         self.category_list.clear_options()
         self.category_list.add_options(
-            [category for category in self.all_categories if event.value.lower() in category.lower()]
+            [category for category in self.categories if event.value.lower() in category.lower()]
         )
         self.category_list.action_first()
 
