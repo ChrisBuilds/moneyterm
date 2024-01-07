@@ -1,44 +1,13 @@
 from decimal import Decimal
-import json
-from pathlib import Path
-from typing import TypedDict
-from textual import on, events
 from textual.app import ComposeResult
-from textual.reactive import reactive
-from textual.screen import Screen
-from textual.message import Message
 from textual.widget import Widget
 from textual.types import NoSelection
-from textual.widgets.select import InvalidSelectValueError
-from textual.validation import Function
-from textual.widgets.option_list import Option
 from textual.widgets import (
-    Header,
-    Footer,
-    DataTable,
-    TabbedContent,
-    TabPane,
-    Label,
-    Select,
     Static,
-    Button,
-    Input,
-    OptionList,
-    Rule,
-    Checkbox,
-    Markdown,
 )
 from rich.table import Table
-from rich.text import Text
-from textual.containers import Horizontal, Grid, VerticalScroll
+from textual.containers import Horizontal, VerticalScroll
 from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.screens.quickcategoryscreen import QuickLabelScreen
-from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
-from moneyterm.screens.addlabelscreen import AddLabelScreen
-from moneyterm.widgets.scopeselectbar import ScopeSelectBar
-from moneyterm.widgets.transactiontable import TransactionTable
-from moneyterm.widgets.labeler import Labeler
-from datetime import datetime
 
 
 class OverviewWidget(Widget):

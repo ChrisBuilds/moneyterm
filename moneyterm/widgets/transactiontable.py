@@ -11,7 +11,7 @@ from textual.widgets import (
     DataTable,
 )
 from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.screens.quickcategoryscreen import QuickLabelScreen
+from moneyterm.screens.quicklabelscreen import QuickLabelScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
 
 

@@ -1,32 +1,15 @@
-from textual import log, on, events
-from textual.message import Message
-from textual.app import App, ComposeResult
-from textual.screen import Screen, ModalScreen
+from textual import events
+from textual.app import ComposeResult
+from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import (
-    Header,
-    Footer,
-    DataTable,
-    TabbedContent,
-    Placeholder,
-    TabPane,
-    Static,
     Button,
-    ListItem,
-    ListView,
     Label,
-    Select,
-    Rule,
-    OptionList,
-    Input,
     Markdown,
     Button,
 )
-from textual.containers import Vertical, Horizontal, VerticalScroll
+from textual.containers import Vertical
 from moneyterm.utils.ledger import Ledger, Transaction
-from moneyterm.utils.financedb import FinanceDB
-from moneyterm.screens.quickcategoryscreen import QuickLabelScreen
-from pathlib import Path
 
 
 class ManualLabelButtons(Widget):
