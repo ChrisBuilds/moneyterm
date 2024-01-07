@@ -1,10 +1,10 @@
-QuickCategoryScreen {
+QuickLabelScreen {
     align: center middle;
     height: auto;
     width: auto;
 }
 
-QuickCategoryScreen VerticalScroll{
+QuickLabelScreen VerticalScroll{
     height: auto;
     width: auto;
     border: double $secondary;
@@ -16,12 +16,12 @@ Rule {
     
 }
 
-QuickCategoryScreen Input {
+QuickLabelScreen Input {
     width: 20;
     background: black;
 
 }
-#category_list {
+#label_list {
     width: 20;
 
     
