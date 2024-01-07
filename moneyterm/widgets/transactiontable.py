@@ -21,6 +21,10 @@ class TransactionTable(DataTable):
             super().__init__()
             self.account_number, self.txid = row_key.split(":")
 
+    class QuickCategoryChanged(Message):
+        def __init__(self) -> None:
+            super().__init__()
+
     account: reactive[str | NoSelection] = reactive(NoSelection)
     year: reactive[int | NoSelection] = reactive(NoSelection)
     month: reactive[int | NoSelection] = reactive(NoSelection)
@@ -105,7 +109,7 @@ class TransactionTable(DataTable):
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
             self.app.push_screen(
                 TransactionDetailScreen(self.ledger, transaction),
-                lambda label_removed: self.update_data() if label_removed else None,
+                self.category_removed,
             )
 
     def action_quick_category(self) -> None:
@@ -114,12 +118,18 @@ class TransactionTable(DataTable):
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
             self.app.push_screen(QuickCategoryScreen(self.ledger, transaction), self.quick_add_category)
 
+    def category_removed(self, label_removed: bool) -> None:
+        if label_removed:
+            self.update_data()
+            self.post_message(self.QuickCategoryChanged())
+
     def quick_add_category(self, category: str) -> None:
         if self.selected_row_key:
             account_number, txid = self.selected_row_key.split(":")
             self.ledger.add_label_to_tx(account_number, txid, category, "categories", auto=False)
             self.ledger.save_ledger_pkl()
             self.update_data()
+            self.post_message(self.QuickCategoryChanged())
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self.selected_row_key = event.row_key.value
