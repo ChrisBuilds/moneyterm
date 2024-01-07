@@ -280,3 +280,16 @@ class TabbedContentScreen(Screen):
         """
         self.import_transactions()
         self.log("Transactions imported.")
+
+    def on_transaction_table_quick_category_changed(self, event: TransactionTable.QuickCategoryChanged) -> None:
+        """
+        Event handler for when a transaction label is added via the quick category screen.
+
+        Args:
+            event (TransactionTable.QuickCategoryChanged): The event object.
+
+        Returns:
+            None
+
+        """
+        self.query_one(Budgeter).update_budgets_table()
