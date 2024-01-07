@@ -233,6 +233,8 @@ class TabbedContentScreen(Screen):
         self.log("Label renamed.")
         self.query_one(Budgeter).handle_category_renamed(event.old_label, event.new_label)
         self.query_one(TrendSelector).handle_labels_updated()
+        for transaction_table in self.query(TransactionTable):
+            transaction_table.update_data()
 
     def on_labeler_label_added(self, event: Labeler.LabelAdded) -> None:
         """
