@@ -73,7 +73,9 @@ class Transaction:
         tx_type (str): The type of transaction.
         amount (Decimal): The amount of the transaction.
         account_number (str): The account number associated with the transaction.
-        auto_labels (Labels): The labels associated with the transaction.
+        auto_labels (Labels): The labels automatically associated with the transaction.
+        manual_labels (Labels): The labels manually associated with the transaction.
+        splits (dict[str, Decimal]): The splits of the transaction, apporitioned by label.
         tags (list[str]): Additional tags for the transaction.
     """
 
@@ -86,6 +88,7 @@ class Transaction:
     account: Account
     auto_labels: Labels
     manual_labels: Labels
+    splits: dict[str, Decimal]
     alias: str = ""
 
 
@@ -159,6 +162,7 @@ class Ledger:
                         account=self.accounts[account.number],
                         auto_labels=Labels(),
                         manual_labels=Labels(),
+                        splits={},
                     )
                     load_results["transactions_added"] += 1
                 else:
@@ -290,8 +294,10 @@ class Ledger:
             if label_str in label_list:
                 label_list.remove(label_str)
                 label_list.sort()
+        if label_str in transaction.splits:
+            transaction.splits.pop(label_str)
 
-    def remove_label(self, label: str) -> None:
+    def remove_label_from_all_tx(self, label: str) -> None:
         """Removes a label from all transactions manual_labels. Labels in auto_labels will be automatically
         updated on the next call to Labeler.scan_and_update_transactions().
 
@@ -303,9 +309,11 @@ class Ledger:
                 if label in label_list:
                     label_list.remove(label)
                     label_list.sort()
+            if label in tx.splits:
+                tx.splits.pop(label)
 
     def rename_label(self, old_label: str, new_label: str) -> None:
-        """Renames labels in the manual_labels labels. Labels in auto_labels will be automatically
+        """Renames labels in the manual_labels labels and the transaction splits. Labels in auto_labels will be automatically
         updated on the next call to Labeler.scan_and_update_transactions().
 
         Args:
@@ -318,6 +326,9 @@ class Ledger:
                     label_list.remove(old_label)
                     label_list.append(new_label)
                     label_list.sort()
+            if old_label in tx.splits:
+                apportion = tx.splits[new_label] = tx.splits.pop(old_label)
+                tx.splits[new_label] = apportion
 
     def get_all_tx_with_label(self, label: str) -> list[Transaction]:
         """Get all transactions with a given label.
@@ -341,6 +352,34 @@ class Ledger:
             if label in all_labels:
                 tx_with_label.append(tx)
         return tx_with_label
+
+    def split_transaction(self, account_number: str, txid: str, label: str, amount: Decimal) -> None:
+        transaction = self.get_tx_by_txid(account_number, txid)
+        all_labels = (
+            transaction.auto_labels.bills
+            + transaction.auto_labels.categories
+            + transaction.auto_labels.incomes
+            + transaction.manual_labels.bills
+            + transaction.manual_labels.categories
+            + transaction.manual_labels.incomes
+        )
+        if label not in all_labels:
+            raise ValueError(f"Label {label} not found in transaction {txid}.")
+        transaction.splits[label] = amount
+
+    def validate_split_labels(self, account_number: str, txid: str) -> None:
+        transaction = self.get_tx_by_txid(account_number, txid)
+        all_labels = (
+            transaction.auto_labels.bills
+            + transaction.auto_labels.categories
+            + transaction.auto_labels.incomes
+            + transaction.manual_labels.bills
+            + transaction.manual_labels.categories
+            + transaction.manual_labels.incomes
+        )
+        for label in transaction.splits:
+            if label not in all_labels:
+                transaction.splits.pop(label)
 
     def add_account_alias(self, account_number: str, alias: str) -> None:
         """Add an alias to an account.
