@@ -116,7 +116,6 @@ class TransactionSplitScreen(ModalScreen):
             yield Button("Save and Close", id="save_button")
 
     def on_mount(self) -> None:
-        # todo: get existing splits
         self.breakdown_static.update(self.update_breakdown())
         if self.transaction.splits:
             for label_value_widget in self.query("LabelValue").results(LabelValue):
