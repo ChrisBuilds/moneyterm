@@ -81,6 +81,8 @@ class TabbedContentScreen(Screen):
         """
         self.load_config_json()
         self.import_transactions()
+        scope_select_bar = self.query_one(ScopeSelectBar)
+        scope_select_bar.show_latest()
 
     def load_config_json(self) -> None:
         """
