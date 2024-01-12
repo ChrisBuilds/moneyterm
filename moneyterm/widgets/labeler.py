@@ -277,7 +277,12 @@ class Labeler(Widget):
         for label_type in self.labels:
             all_labels.extend(list(self.labels[label_type]))
         self.app.push_screen(AddLabelScreen(list(all_labels)), self.create_new_label)
-        # TODO: push message for new label and update trends/budget labels lists
+
+    def create_new_label(self, new_label_name: str) -> None:
+        self.labels[self.selected_type][new_label_name] = {}
+        self.write_labels_json()
+        self.update_label_select(set_selection=new_label_name)
+        self.post_message(self.LabelAdded(added_label=new_label_name))
 
     @on(Button.Pressed, "#remove_label_button")
     def on_remove_label_button_press(self, event: Button.Pressed) -> None:
@@ -291,12 +296,13 @@ class Labeler(Widget):
         if isinstance(self.selected_label, NoSelection):
             return
         if confirm:
+            removed_label = self.selected_label
             self.labels[self.selected_type].pop(self.selected_label)
             self.ledger.remove_label_from_all_tx(self.selected_label)
             self.write_labels_json()
             self.update_label_select()
             self.scan_and_update_transactions()
-            self.post_message(self.LabelRemoved(removed_label=self.selected_label))
+            self.post_message(self.LabelRemoved(removed_label=removed_label))
 
     @on(Button.Pressed, "#rename_label_button")
     def on_rename_label_button_press(self, event: Button.Pressed) -> None:
@@ -499,11 +505,6 @@ class Labeler(Widget):
             )
             validated = False
         return validated
-
-    def create_new_label(self, new_label_name: str) -> None:
-        self.labels[self.selected_type][new_label_name] = {}
-        self.write_labels_json()
-        self.update_label_select(set_selection=new_label_name)
 
     def update_label_select(self, set_selection: str | None = None) -> None:
         """Update the label select options based on the selected type.
