@@ -148,22 +148,25 @@ class TabbedContentScreen(Screen):
             "transactions_added": 0,
             "transactions_ignored": 0,
         }
+        import_state = False
         for file in import_dir.iterdir():
             if file.suffix == self.config["import_extension"]:
                 load_results = self.ledger.load_ofx_data(file)
+                import_state = True
                 if any(load_results.values()):
                     overall_load_results["source_files"] += 1
                     overall_load_results["accounts_added"] += load_results["accounts_added"]
                     overall_load_results["transactions_added"] += load_results["transactions_added"]
                     overall_load_results["transactions_ignored"] += load_results["transactions_ignored"]
-        self.notify(
-            f"Import complete. {overall_load_results['source_files']} source files processed. "
-            f"{overall_load_results['accounts_added']} accounts added. "
-            f"{overall_load_results['transactions_added']} transactions added. "
-            f"{overall_load_results['transactions_ignored']} transactions ignored.",
-            title="Import Complete",
-            timeout=7,
-        )
+        if import_state:
+            self.notify(
+                f"Import complete. {overall_load_results['source_files']} source files processed. "
+                f"{overall_load_results['accounts_added']} accounts added. "
+                f"{overall_load_results['transactions_added']} transactions added. "
+                f"{overall_load_results['transactions_ignored']} transactions ignored.",
+                title="Import Complete",
+                timeout=7,
+            )
         self.ledger.save_ledger_pkl()
         self.query_one(ScopeSelectBar).refresh_all_selects()
         for transaction_table in self.query(TransactionTable):
