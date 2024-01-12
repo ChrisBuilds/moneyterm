@@ -277,13 +277,14 @@ class Labeler(Widget):
         for label_type in self.labels:
             all_labels.extend(list(self.labels[label_type]))
         self.app.push_screen(AddLabelScreen(list(all_labels)), self.create_new_label)
+        # TODO: push message for new label and update trends/budget labels lists
 
     @on(Button.Pressed, "#remove_label_button")
     def on_remove_label_button_press(self, event: Button.Pressed) -> None:
         if isinstance(self.selected_label, NoSelection):
             return
         match_count = len(self.labels[self.selected_type][self.selected_label])
-        message = f"Are you sure you want to remove label '{self.selected_label}' and its {match_count} matches?"
+        message = f"Are you sure you want to remove label '{self.selected_label}' and its {match_count} matches? If this label has been manually applied to a transaction or is used in a transaction split, the split/label will be removed."
         self.app.push_screen(ConfirmScreen(message), self.remove_selected_label)
 
     def remove_selected_label(self, confirm: bool) -> None:
@@ -291,11 +292,11 @@ class Labeler(Widget):
             return
         if confirm:
             self.labels[self.selected_type].pop(self.selected_label)
-            self.post_message(self.LabelRemoved(removed_label=self.selected_label))
+            self.ledger.remove_label_from_all_tx(self.selected_label)
             self.write_labels_json()
             self.update_label_select()
-            self.ledger.remove_label(self.selected_label)
             self.scan_and_update_transactions()
+            self.post_message(self.LabelRemoved(removed_label=self.selected_label))
 
     @on(Button.Pressed, "#rename_label_button")
     def on_rename_label_button_press(self, event: Button.Pressed) -> None:
@@ -406,6 +407,8 @@ class Labeler(Widget):
                             self.ledger.add_label_to_tx(transaction.account.number, transaction.txid, label, label_type)
                             if match_fields["alias"]:
                                 transaction.alias = match_fields["alias"]
+            self.ledger.validate_split_labels(transaction.account.number, transaction.txid)
+
         self.notify(f"All transaction labels updated.", title="Scan and Update Complete", timeout=7)
         self.ledger.save_ledger_pkl()
         self.post_message(self.LabelsUpdated())
