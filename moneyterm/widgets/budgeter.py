@@ -145,12 +145,12 @@ class Budgeter(Widget):
 
         # load labels from labels json
         self.load_labels_from_json()
+        self.builder.update_category_select(self.labels)
 
     def load_labels_from_json(self) -> None:
         try:
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
-                self.builder.update_category_select(self.labels)
         except FileNotFoundError:
             pass
 
@@ -228,16 +228,16 @@ class Budgeter(Widget):
             self.budgets[new_category] = self.budgets.pop(old_category)
             self.write_budgets_json()
             self.update_budgets_table()
-            self.load_labels_from_json()
-            self.builder.update_category_select(self.labels)
+        self.load_labels_from_json()
+        self.builder.update_category_select(self.labels)
 
     def handle_category_removed(self, category: str):
         if category in self.budgets:
             del self.budgets[category]
             self.write_budgets_json()
             self.update_budgets_table()
-            self.load_labels_from_json()
-            self.builder.update_category_select(self.labels)
+        self.load_labels_from_json()
+        self.builder.update_category_select(self.labels)
 
     def handle_category_added(self):
         self.load_labels_from_json()
