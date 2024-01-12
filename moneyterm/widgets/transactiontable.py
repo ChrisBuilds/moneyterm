@@ -13,6 +13,7 @@ from textual.widgets import (
 from moneyterm.utils.ledger import Ledger, Transaction
 from moneyterm.screens.quicklabelscreen import QuickLabelScreen
 from moneyterm.screens.transactiondetailscreen import TransactionDetailScreen
+from moneyterm.screens.transactionsplitscreen import TransactionSplitScreen
 
 
 class TransactionTable(DataTable):
@@ -33,6 +34,7 @@ class TransactionTable(DataTable):
         ("c", "quick_label", "Quick Label"),
         ("i", "transaction_details", "Transaction Details"),
         ("ctrl+l", "send_to_labeler", "Send to Labeler"),
+        ("/", "split_transaction", "Split Transaction"),
     ]
 
     def __init__(self, ledger: Ledger) -> None:
@@ -74,23 +76,27 @@ class TransactionTable(DataTable):
 
     def add_transaction_row(self, tx: Transaction) -> None:
         self.cursor_type = "row"
-        labels = ",".join(
-            sorted(
-                tx.auto_labels.bills
-                + tx.auto_labels.categories
-                + tx.auto_labels.incomes
-                + tx.manual_labels.bills
-                + tx.manual_labels.categories
-                + tx.manual_labels.incomes
-            )
+        all_labels = sorted(
+            tx.auto_labels.bills
+            + tx.auto_labels.categories
+            + tx.auto_labels.incomes
+            + tx.manual_labels.bills
+            + tx.manual_labels.categories
+            + tx.manual_labels.incomes
         )
+        labels_with_splits = []
+        for label in all_labels:
+            if label in tx.splits and tx.splits[label] > 0:
+                labels_with_splits.append(f"{label} (${tx.splits[label]:.2f})")
+            else:
+                labels_with_splits.append(label)
         self.add_row(
             tx.date.strftime("%Y-%m-%d"),
             tx.alias if tx.alias else tx.payee,
             tx.tx_type,
             tx.amount,
             tx.account.alias if tx.account.alias else tx.account.number,
-            labels,
+            ",".join(labels_with_splits),
             key=f"{tx.account.number}:{tx.txid}",
         )
 
@@ -117,6 +123,14 @@ class TransactionTable(DataTable):
             account_number, txid = self.selected_row_key.split(":")
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
             self.app.push_screen(QuickLabelScreen(self.ledger, transaction), self.quick_add_label)
+
+    def action_split_transaction(self) -> None:
+        if self.selected_row_key:
+            account_number, txid = self.selected_row_key.split(":")
+            transaction = self.ledger.get_tx_by_txid(account_number, txid)
+            self.app.push_screen(
+                TransactionSplitScreen(self.ledger, transaction), lambda split: self.update_data() if split else None
+            )
 
     def label_removed(self, label_removed: bool) -> None:
         if label_removed:
