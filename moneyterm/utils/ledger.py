@@ -185,6 +185,21 @@ class Ledger:
                 dates[tx.date.year].add((tx.date.month, tx.date.strftime("%B")))
         return dates
 
+    def get_most_recent_year_month(self, account_number: str) -> tuple[int, int]:
+        """Get the most recent year and month with transaction activity.
+
+        Args:
+            account_number (str): Account number
+
+        Returns:
+            tuple[int, int]: Year and month
+        """
+        dates = self.find_dates_with_tx_activity(account_number)
+        if dates:
+            return max(dates.keys()), max(dates[max(dates.keys())])[0]
+        else:
+            return 0, 0
+
     def get_tx_by_txid(self, account_number: str, txid: str) -> Transaction:
         """Get a transaction by its ID.
 
