@@ -33,6 +33,7 @@ class ScopeSelectBar(Widget):
         self.account_select: Select[str] = Select([], id="account_select")
         self.year_select: Select[int] = Select([], id="year_select")
         self.month_select: Select[int] = Select([], id="month_select")
+        self.accounts: list[str] = []
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="scope_select_bar"):
@@ -100,6 +101,19 @@ class ScopeSelectBar(Widget):
             else:
                 self.year_select.set_options([])
                 self.month_select.set_options([])
+
+    def show_latest(self) -> None:
+        """
+        Selects the latest account, year, and month.
+        """
+        # TODO: fix this multiple refresh nonsense
+        year, month = self.ledger.get_most_recent_year_month(list(self.ledger.accounts)[-1])
+        self.account_select.value = list(self.ledger.accounts)[-1]
+        self.refresh_year_month_selects()
+        self.year_select.value = year
+        self.refresh_year_month_selects()
+        self.month_select.value = month
+        self.post_message(self.ScopeChanged(self.account_select.value, self.year_select.value, self.month_select.value))
 
     @on(Select.Changed, "#account_select")
     def on_account_select_change(self, event: Select.Changed) -> None:
