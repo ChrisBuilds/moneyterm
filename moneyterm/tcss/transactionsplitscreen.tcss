@@ -1,0 +1,48 @@
+TransactionSplitScreen {
+    align: center middle;
+    height: auto;
+    width: auto;
+}
+
+TransactionSplitScreen VerticalScroll{
+    height: auto;
+    width: 41;
+    border: double $secondary;
+    border-title-align: center;
+    background: $primary-background;
+
+
+}
+
+TransactionSplitScreen #table {
+    width: 100%;
+    height: auto;
+    content-align: center middle;
+}
+
+TransactionSplitScreen Button {
+    width: 100%;
+}
+
+TransactionSplitScreen Rule {
+    height: 1;
+    margin-bottom: 0;
+}
+
+LabelValue {
+    width: auto;
+    height: 3;
+}
+
+LabelValue Horizontal {
+    width: 40;
+    height: 3;
+}
+
+LabelValue Label {
+    width: 25;
+}
+
+LabelValue Input {
+    width: 14;
+}
