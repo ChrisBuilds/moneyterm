@@ -170,3 +170,4 @@ moneyterm/data/ledger.pkl
 moneyterm/data/labels.json
 moneyterm/data/budgets.json
 moneyterm/data/config.json
+moneyterm/data/*.bak
