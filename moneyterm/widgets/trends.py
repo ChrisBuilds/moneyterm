@@ -1,3 +1,4 @@
+from decimal import Decimal
 import json
 from pathlib import Path
 from textual import on
@@ -93,11 +94,25 @@ class TrendAnalysis(Widget):
         stats_table = Table(title="Stats Over Period", show_header=False, box=box.MINIMAL)
         stats_table.add_column("", justify="right")
         stats_table.add_column("")
-        stats_table.add_row("Total", f"${abs((sum([tx.amount for tx in tx_with_label])))}")
-        stats_table.add_row("Median", f"${abs(sorted([tx.amount for tx in tx_with_label])[len(tx_with_label) // 2])}")
-        stats_table.add_row("Min", f"${min([abs(tx.amount) for tx in tx_with_label])}")
-        stats_table.add_row("Max", f"${max([abs(tx.amount) for tx in tx_with_label])}")
-        stats_table.add_row("Count", f"{len(tx_with_label)}")
+        total_amount = Decimal(0)
+        count = len(tx_with_label)
+        amounts_list: list[Decimal] = []  # amounts for each transaction, used for median, min, max
+        for tx in tx_with_label:
+            if self.subject in tx.splits:
+                amount = tx.splits[self.subject]
+            else:
+                amount = tx.amount
+            amounts_list.append(abs(amount))
+            total_amount += abs(amount)
+        median_amount = sorted(amounts_list)[len(amounts_list) // 2]
+        min_amount = min(amounts_list)
+        max_amount = max(amounts_list)
+
+        stats_table.add_row("Total", f"${total_amount}")
+        stats_table.add_row("Median", f"${median_amount}")
+        stats_table.add_row("Min", f"${min_amount}")
+        stats_table.add_row("Max", f"${max_amount}")
+        stats_table.add_row("Count", f"{count}")
         self.stats_table_static.update(stats_table)
 
         # make stats by month table for all months with transactions
@@ -117,7 +132,12 @@ class TrendAnalysis(Widget):
                 row_data.append("$0")
                 continue
             # make row with values for each month resulting in a horizontal table
-            month_total = sum([abs(tx.amount) for tx in month_tx])
+            month_total = Decimal(0)
+            for tx in month_tx:
+                if self.subject in tx.splits:
+                    month_total += abs(tx.splits[self.subject])
+                else:
+                    month_total += abs(tx.amount)
             chart_data.append(float(month_total))
             row_data.append(f"${month_total}")
         stats_by_month_table.add_row(*row_data)
