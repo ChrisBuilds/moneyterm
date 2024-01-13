@@ -151,6 +151,17 @@ class Ledger:
                 )
                 load_results["accounts_added"] += 1
             for tx in account.statement.transactions:
+                dupe = False
+                # temp dedupe hack due to bank export transaction id change
+                # transactions with the same amount on the same day are considered duplicates if the transaction
+                # id has a different length (corresponding to the change in transaction id length in the bank export)
+                for tx_by_day in self.get_tx_by_day(account.number, tx.date.year, tx.date.month, tx.date.day):
+                    if tx_by_day.amount == Decimal(tx.amount) and len(tx_by_day.txid) != len(tx.id):
+                        dupe = True
+                        load_results["transactions_ignored"] += 1
+                        break
+                if dupe:
+                    continue
                 if (account.number, tx.id) not in self.transactions:
                     self.transactions[(account.number, tx.id)] = Transaction(
                         date=tx.date.date(),
@@ -272,6 +283,32 @@ class Ledger:
         ]
         return sorted(tx_list, key=lambda tx: tx.date)
 
+    def get_tx_by_day(self, account_number: str, year: int, month: int, day: int) -> list[Transaction]:
+        """Get all transactions for a given day.
+
+        Args:
+            account_number (str): Account number
+            year (int): year
+            month (int): month
+            day (int): day
+
+        Returns:
+            list[Transaction]: List of transactions
+        """
+        if month not in range(1, 13):
+            raise ValueError(f"Invalid month: {month}")
+        if day not in range(1, 32):
+            raise ValueError(f"Invalid day: {day}")
+        tx_list = [
+            tx
+            for tx in self.transactions.values()
+            if tx.account.number == account_number
+            and tx.date.month == month
+            and tx.date.year == year
+            and tx.date.day == day
+        ]
+        return sorted(tx_list, key=lambda tx: tx.date)
+
     def add_label_to_tx(self, account_number: str, txid: str, label_str: str, label_type: str, auto=True) -> None:
         """Add a label to a transaction.
 
@@ -369,6 +406,18 @@ class Ledger:
         return tx_with_label
 
     def split_transaction(self, account_number: str, txid: str, label: str, amount: Decimal) -> None:
+        """Split a transaction by label. If the amount is positive, the label is added to the splits dict. If the amount is 0 or less,
+        the label is removed from the splits dict.
+
+        Args:
+            account_number (str): account number
+            txid (str): transaction ID
+            label (str): label to split
+            amount (Decimal): amount to split by
+
+        Raises:
+            ValueError: If the label is not found in the transaction.
+        """
         transaction = self.get_tx_by_txid(account_number, txid)
         all_labels = (
             transaction.auto_labels.bills
@@ -380,7 +429,10 @@ class Ledger:
         )
         if label not in all_labels:
             raise ValueError(f"Label {label} not found in transaction {txid}.")
-        transaction.splits[label] = amount
+        if amount > 0:
+            transaction.splits[label] = amount
+        else:
+            transaction.splits.pop(label)
 
     def validate_split_labels(self, account_number: str, txid: str) -> None:
         transaction = self.get_tx_by_txid(account_number, txid)
