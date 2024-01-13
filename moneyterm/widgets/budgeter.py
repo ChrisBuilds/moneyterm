@@ -170,7 +170,12 @@ class Budgeter(Widget):
             # get transactions for the current month
             current_month_transactions = [tx for tx in transactions if tx.date.month == month and tx.date.year == year]
             # total transactions amount (abs value)
-            total_transactions_amount = sum([abs(tx.amount) for tx in current_month_transactions], Decimal(0))
+            total_transactions_amount = Decimal(0)
+            for transaction in current_month_transactions:
+                if budget_category in transaction.splits:
+                    total_transactions_amount += transaction.splits[budget_category]
+                else:
+                    total_transactions_amount += abs(transaction.amount)
             # remaining budget
             remaining_budget = decimal_budget_amount - total_transactions_amount
             return (total_transactions_amount, remaining_budget)
