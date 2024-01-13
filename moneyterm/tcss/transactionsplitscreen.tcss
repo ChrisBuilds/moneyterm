@@ -20,8 +20,9 @@ TransactionSplitScreen #table {
     content-align: center middle;
 }
 
-TransactionSplitScreen Button {
+TransactionSplitScreen #save_button{
     width: 100%;
+    
 }
 
 TransactionSplitScreen Rule {
