@@ -102,13 +102,18 @@ class ScopeSelectBar(Widget):
                 self.year_select.set_options([])
                 self.month_select.set_options([])
 
-    def show_latest(self) -> None:
+    def show_latest(self, default_account: str) -> None:
         """
         Selects the latest account, year, and month.
         """
         # TODO: fix this multiple refresh nonsense
-        year, month = self.ledger.get_most_recent_year_month(list(self.ledger.accounts)[-1])
-        self.account_select.value = list(self.ledger.accounts)[-1]
+        if not self.ledger.accounts:
+            return
+        if default_account and default_account in self.ledger.accounts:
+            self.account_select.value = default_account
+        else:
+            self.account_select.value = list(self.ledger.accounts)[0]
+        year, month = self.ledger.get_most_recent_year_month(self.account_select.value)
         self.refresh_year_month_selects()
         self.year_select.value = year
         self.refresh_year_month_selects()

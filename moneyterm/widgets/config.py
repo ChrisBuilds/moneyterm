@@ -10,10 +10,11 @@ from textual.widgets import (
     Button,
     Input,
 )
+from textual.widgets.select import InvalidSelectValueError
 from textual.containers import Horizontal
 from moneyterm.utils.ledger import Ledger
 
-DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}}
+DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}, "default_account": ""}
 
 
 class Config(Widget):
@@ -58,6 +59,13 @@ class Config(Widget):
 
         self.alias_account_input = Input(id="alias_account_input", placeholder="Alias")
         self.save_config_button = Button("Save Config", id="save_config_button")
+
+        self.default_account_select = Select(
+            id="default_account_select",
+            options=((account, account) for account in self.ledger.accounts),
+            prompt="Select Account",
+        )
+
         self.import_transactions_button = Button("Import Transactions", id="import_transactions_button")
 
     def compose(self) -> ComposeResult:
@@ -76,6 +84,9 @@ class Config(Widget):
             yield Label("Account", id="alias_label")
             yield self.alias_account_select
             yield self.alias_account_input
+        with Horizontal(id="default_account_horizontal"):
+            yield Label("Default Account", id="default_label")
+            yield self.default_account_select
         with Horizontal(id="button_horizontal"):
             yield self.save_config_button
             yield self.import_transactions_button
@@ -89,6 +100,13 @@ class Config(Widget):
             self.directory_input.value = self.config["import_directory"]
         if isinstance(self.config["import_extension"], str):
             self.extension_input.value = self.config["import_extension"]
+        if self.config["default_account"] and isinstance(self.config["default_account"], str):
+            try:
+                self.default_account_select.value = self.config["default_account"]
+            except InvalidSelectValueError:
+                self.default_account_select.clear()
+        else:
+            self.default_account_select.clear()
 
     def refresh_config(self) -> None:
         """
@@ -101,6 +119,14 @@ class Config(Widget):
         self.alias_account_select.set_options(((account, account) for account in self.ledger.accounts))
         self.alias_account_select.clear()
         self.alias_account_input.value = ""
+        self.default_account_select.set_options(((account, account) for account in self.ledger.accounts))
+        if self.config["default_account"] and isinstance(self.config["default_account"], str):
+            try:
+                self.default_account_select.value = self.config["default_account"]
+            except InvalidSelectValueError:
+                self.default_account_select.clear()
+        else:
+            self.default_account_select.clear()
 
     def load_config_json(self) -> None:
         """
@@ -152,6 +178,9 @@ class Config(Widget):
                 and isinstance(self.alias_account_input.value, str)
             ):
                 self.config["account_aliases"][self.alias_account_select.value] = f"{self.alias_account_input.value}"
+        if not self.default_account_select.value is Select.BLANK:
+            if isinstance(self.default_account_select.value, str):
+                self.config["default_account"] = self.default_account_select.value
         self.write_config_json()
         self.notify("Config saved.", severity="information", timeout=5, title="Config Saved")
         for account in self.config["account_aliases"]:
