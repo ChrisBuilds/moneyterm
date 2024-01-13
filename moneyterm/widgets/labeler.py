@@ -610,18 +610,18 @@ class Labeler(Widget):
         # check memo
         if match_fields["memo"]:
             if match_fields["memo_exact"]:
-                if match_fields["memo"] != transaction.memo:
+                if match_fields["memo"].casefold() != transaction.memo.casefold():
                     return False
             else:
-                if match_fields["memo"] not in transaction.memo:
+                if match_fields["memo"].casefold() not in transaction.memo.casefold():
                     return False
         # check payee
         if match_fields["payee"]:
             if match_fields["payee_exact"]:
-                if match_fields["payee"] != transaction.payee:
+                if match_fields["payee"].casefold() != transaction.payee.casefold():
                     return False
             else:
-                if match_fields["payee"] not in transaction.payee:
+                if match_fields["payee"].casefold() not in transaction.payee.casefold():
                     return False
         # check amount
         if match_fields["amount_min"]:
