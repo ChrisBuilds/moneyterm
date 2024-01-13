@@ -346,6 +346,16 @@ Config #alias_account_input {
     width: 30;
 }
 
+Config #default_account_horizontal{
+    height: auto;
+    width: 100%;
+    padding-bottom: 1;
+}
+
+Config #default_account_select {
+    width: 30;
+}
+
 Config #import_transactions_button {
     margin-left: 1;
 }
