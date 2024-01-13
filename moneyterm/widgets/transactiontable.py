@@ -26,6 +26,17 @@ class TransactionTable(DataTable):
         def __init__(self) -> None:
             super().__init__()
 
+    class TransactionSplitModified(Message):
+        """Message for when transaction splits are modified, added, or removed."""
+
+        def __init__(self) -> None:
+            """Initialize message.
+
+            Args:
+                None
+            """
+            super().__init__()
+
     account: reactive[str | NoSelection] = reactive(NoSelection)
     year: reactive[int | NoSelection] = reactive(NoSelection)
     month: reactive[int | NoSelection] = reactive(NoSelection)
@@ -129,8 +140,13 @@ class TransactionTable(DataTable):
             account_number, txid = self.selected_row_key.split(":")
             transaction = self.ledger.get_tx_by_txid(account_number, txid)
             self.app.push_screen(
-                TransactionSplitScreen(self.ledger, transaction), lambda split: self.update_data() if split else None
+                TransactionSplitScreen(self.ledger, transaction),
+                lambda split: self.splits_modified() if split else None,
             )
+
+    def splits_modified(self) -> None:
+        self.update_data()
+        self.post_message(self.TransactionSplitModified())
 
     def label_removed(self, label_removed: bool) -> None:
         if label_removed:
