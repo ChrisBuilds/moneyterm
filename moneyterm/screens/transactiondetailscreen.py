@@ -23,7 +23,7 @@ class ManualLabelButtons(Widget):
         """
 
         super().__init__()
-        self.manual_labels = tx.manual_labels.bills + tx.manual_labels.categories + tx.manual_labels.incomes
+        self.manual_labels = tx.manual_labels.bills + tx.manual_labels.expenses + tx.manual_labels.incomes
         self.id = "manual_label_buttons"
 
     def compose(self) -> ComposeResult:
@@ -73,7 +73,7 @@ class TransactionDetailScreen(ModalScreen):
 
 **Bills Auto-Labels** : {','.join(self.transaction.auto_labels.bills)}
 
-**Categories Auto-Labels** : {','.join(self.transaction.auto_labels.categories)}
+**Expenses Auto-Labels** : {','.join(self.transaction.auto_labels.expenses)}
 
 **Incomes Auto-Labels** : {','.join(self.transaction.auto_labels.incomes)}
 """

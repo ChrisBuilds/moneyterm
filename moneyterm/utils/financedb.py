@@ -130,37 +130,37 @@ class FinanceDB:
             accounts = self._execute_read_query(account_query)
         return accounts
 
-    def query_categories(self, category_id: int | None = None) -> list[tuple[int, str]]:
-        """Query database for category by category id, or all if no id is given."""
-        if not category_id:
-            category_query = f"""
-            SELECT * FROM categories;
+    def query_expenses(self, expense_id: int | None = None) -> list[tuple[int, str]]:
+        """Query database for expense by expense id, or all if no id is given."""
+        if not expense_id:
+            expense_query = f"""
+            SELECT * FROM expenses;
             """
         else:
-            category_query = f"""
-            SELECT * FROM categories WHERE id = {category_id};
+            expense_query = f"""
+            SELECT * FROM expenses WHERE id = {expense_id};
             """
-        categories = self._execute_read_query(category_query)
-        return categories
+        expenses = self._execute_read_query(expense_query)
+        return expenses
 
-    def insert_category(self, category_str: str) -> None:
-        """Insert a category into the database if not already present."""
-        categories = [category[1] for category in self.query_categories()]
-        if category_str not in categories:
+    def insert_expense(self, expense_str: str) -> None:
+        """Insert a expense into the database if not already present."""
+        expenses = [expense[1] for expense in self.query_expenses()]
+        if expense_str not in expenses:
             insert_statement = f"""
-            INSERT INTO categories
-                (category)
+            INSERT INTO expenses
+                (expense)
             VALUES
-                ("{category_str}");
+                ("{expense_str}");
             """
             self._execute_query(insert_statement)
 
-    def delete_category(self, category_str: str | None = None, category_id: int | None = None) -> None:
-        """Delete a category from the database."""
-        if not category_str and not category_id:
-            raise ValueError("finanacedb.delete_category: Must provide either category string or category id.")
+    def delete_expense(self, expense_str: str | None = None, expense_id: int | None = None) -> None:
+        """Delete a expense from the database."""
+        if not expense_str and not expense_id:
+            raise ValueError("finanacedb.delete_expense: Must provide either expense string or expense id.")
         delete_statement = f"""
-        DELETE FROM categories WHERE {'category' if category_str else 'id'} = '{category_str if category_str else category_id}';
+        DELETE FROM expenses WHERE {'expense' if expense_str else 'id'} = '{expense_str if expense_str else expense_id}';
         """
         self._execute_query(delete_statement)
 
@@ -224,30 +224,30 @@ class FinanceDB:
         """
         self._execute_query(update_statement)
 
-    def add_category_to_tx(self, transaction_id: str, category_str: str) -> None:
-        """Add category to transaction if transaction has available category slot and category not already present."""
+    def add_expense_to_tx(self, transaction_id: str, expense_str: str) -> None:
+        """Add expense to transaction if transaction has available expense slot and expense not already present."""
         tx = self.query_transactions(transaction_id)[0]
-        current_categories = tx[8:13]
-        if category_str in current_categories:
+        current_expenses = tx[8:13]
+        if expense_str in current_expenses:
             return
-        for slot, category in enumerate(current_categories):
-            if category is None:
+        for slot, expense in enumerate(current_expenses):
+            if expense is None:
                 insert_statement = f"""
                 UPDATE transactions
-                SET category{slot} = '{category_str}'
+                SET expense{slot} = '{expense_str}'
                 WHERE txid = '{transaction_id}';
                 """
                 self._execute_query(insert_statement)
                 return
 
-    def remove_category_from_tx(self, transaction_id: str, category_str: str) -> None:
+    def remove_expense_from_tx(self, transaction_id: str, expense_str: str) -> None:
         """Remove a tag from a transaction."""
         tx = self.query_transactions(transaction_id)[0]
-        current_categories = tx[8:13]
-        category_slot = current_categories.index(category_str)
+        current_expenses = tx[8:13]
+        expense_slot = current_expenses.index(expense_str)
         update_statement = f"""
         UPDATE transactions
-        SET category{category_slot} = NULL
+        SET expense{expense_slot} = NULL
         WHERE txid = '{transaction_id}';
         """
         self._execute_query(update_statement)
@@ -272,22 +272,22 @@ class FinanceDB:
                 type TEXT,
                 amount REAL,
                 account_number INT,
-                category0 STR,
-                category1 STR,                
-                category2 STR,
-                category3 STR,
-                category4 STR,
+                expense0 STR,
+                expense1 STR,                
+                expense2 STR,
+                expense3 STR,
+                expense4 STR,
                 tag0 STR,
                 tag1 STR,
                 tag2 STR,
                 tag3 STR,
                 tag4 STR,
                 FOREIGN KEY (account_number) REFERENCES accounts (number),
-                FOREIGN KEY (category0) REFERENCES categories (category),                
-                FOREIGN KEY (category1) REFERENCES categories (category),
-                FOREIGN KEY (category2) REFERENCES categories (category),
-                FOREIGN KEY (category3) REFERENCES categories (category),
-                FOREIGN KEY (category4) REFERENCES categories (category),
+                FOREIGN KEY (expense0) REFERENCES expenses (expense),                
+                FOREIGN KEY (expense1) REFERENCES expenses (expense),
+                FOREIGN KEY (expense2) REFERENCES expenses (expense),
+                FOREIGN KEY (expense3) REFERENCES expenses (expense),
+                FOREIGN KEY (expense4) REFERENCES expenses (expense),
                 FOREIGN KEY (tag0) REFERENCES tags (tag)   
                 FOREIGN KEY (tag1) REFERENCES tags (tag),
                 FOREIGN KEY (tag2) REFERENCES tags (tag),
@@ -295,10 +295,10 @@ class FinanceDB:
                 FOREIGN KEY (tag4) REFERENCES tags (tag)
             );
         """
-        create_categories_table = """
-            CREATE TABLE IF NOT EXISTS categories (
+        create_expenses_table = """
+            CREATE TABLE IF NOT EXISTS expenses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category TEXT UNIQUE
+                expense TEXT UNIQUE
             );
             
                 """
@@ -309,7 +309,7 @@ class FinanceDB:
             );
     """
         self._execute_query(create_accounts_table)
-        self._execute_query(create_categories_table)
+        self._execute_query(create_expenses_table)
         self._execute_query(create_tags_table)
         self._execute_query(create_transactions_table)
 
@@ -327,10 +327,10 @@ class FinanceDB:
                     self.insert_tx(account.number, tx)
                     transactions_added += 1
 
-    def query_transactions_with_category(self, category: str) -> list[TRANSACTION_ROW]:
-        """Query database for transactions with a given category."""
+    def query_transactions_with_expense(self, expense: str) -> list[TRANSACTION_ROW]:
+        """Query database for transactions with a given expense."""
         query = f"""
-        SELECT * FROM transactions WHERE category0 = '{category}' OR category1 = '{category}' OR category2 = '{category}' OR category3 = '{category}' OR category4 = '{category}';
+        SELECT * FROM transactions WHERE expense0 = '{expense}' OR expense1 = '{expense}' OR expense2 = '{expense}' OR expense3 = '{expense}' OR expense4 = '{expense}';
         """
         transactions = self._execute_read_query(query)
         return transactions

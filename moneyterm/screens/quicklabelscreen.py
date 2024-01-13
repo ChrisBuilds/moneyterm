@@ -63,11 +63,11 @@ class QuickLabelScreen(ModalScreen):
         try:
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 labels = json.load(f)
-                for label_type in ("Bills", "Categories", "Incomes"):
+                for label_type in ("Bills", "Expenses", "Incomes"):
                     for label in labels[label_type]:
                         self.label_types_map[label] = label_type
                 self.labels.extend(labels["Bills"])
-                self.labels.extend(labels["Categories"])
+                self.labels.extend(labels["Expenses"])
                 self.labels.extend(labels["Incomes"])
                 self.labels.sort(key=lambda x: x.lower())
 

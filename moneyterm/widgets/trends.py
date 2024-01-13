@@ -165,7 +165,7 @@ class TrendSelector(Widget):
         self.dates_horizontal = Horizontal(id="dates_horizontal")
         self.type_selector_label = Label("Type: ")
         self.type_selector: Select[str] = Select(
-            [("Bills", "Bills"), ("Categories", "Categories"), ("Incomes", "Incomes")],
+            [("Bills", "Bills"), ("Expenses", "Expenses"), ("Incomes", "Incomes")],
             allow_blank=False,
             id="trend_type_select",
         )
@@ -199,7 +199,7 @@ class TrendSelector(Widget):
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
-            self.labels = {"Bills": {}, "Categories": {}, "Incomes": {}}
+            self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}
         self.update_label_selector()
 
     def compose(self) -> ComposeResult:
@@ -231,7 +231,7 @@ class TrendSelector(Widget):
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
-            self.labels = {"Bills": {}, "Categories": {}, "Incomes": {}}
+            self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}
 
     def update_label_selector(self, set_selection: str | None = None) -> None:
         """Update the label select options based on the selected type.

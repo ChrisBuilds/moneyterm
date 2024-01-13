@@ -4,7 +4,7 @@ This module, ledger.py, provides classes for managing financial transactions and
 Classes:
     Account: Represents a financial account with attributes such as number, account type, institution, and an optional alias.
 
-    Labels: Manages lists of bill labels, category labels, and income labels.
+    Labels: Manages lists of bill labels, expense labels, and income labels.
 
     Transaction: Represents a financial transaction with attributes such as date, transaction ID, memo, payee, transaction type, amount, account number, labels, and tags.
 
@@ -51,12 +51,12 @@ class Labels:
 
     Attributes:
         bills (list[str]): List of bill labels.
-        categories (list[str]): List of category labels.
+        expenses (list[str]): List of expense labels.
         incomes (list[str]): List of income labels.
     """
 
     bills: list[str] = field(default_factory=list)
-    categories: list[str] = field(default_factory=list)
+    expenses: list[str] = field(default_factory=list)
     incomes: list[str] = field(default_factory=list)
 
 
@@ -321,9 +321,9 @@ class Ledger:
         if label_type == "Bills":
             auto_labels = self.transactions[(account_number, txid)].auto_labels.bills
             manual_labels = self.transactions[(account_number, txid)].manual_labels.bills
-        elif label_type == "Categories":
-            auto_labels = self.transactions[(account_number, txid)].auto_labels.categories
-            manual_labels = self.transactions[(account_number, txid)].manual_labels.categories
+        elif label_type == "Expenses":
+            auto_labels = self.transactions[(account_number, txid)].auto_labels.expenses
+            manual_labels = self.transactions[(account_number, txid)].manual_labels.expenses
         elif label_type == "Incomes":
             auto_labels = self.transactions[(account_number, txid)].auto_labels.incomes
             manual_labels = self.transactions[(account_number, txid)].manual_labels.incomes
@@ -340,7 +340,7 @@ class Ledger:
         transaction = self.get_tx_by_txid(account_number, txid)
         for label_list in (
             transaction.manual_labels.bills,
-            transaction.manual_labels.categories,
+            transaction.manual_labels.expenses,
             transaction.manual_labels.incomes,
         ):
             if label_str in label_list:
@@ -357,7 +357,7 @@ class Ledger:
             label (str): Label to remove
         """
         for tx in self.get_all_tx():
-            for label_list in (tx.manual_labels.bills, tx.manual_labels.categories, tx.manual_labels.incomes):
+            for label_list in (tx.manual_labels.bills, tx.manual_labels.expenses, tx.manual_labels.incomes):
                 if label in label_list:
                     label_list.remove(label)
                     label_list.sort()
@@ -373,7 +373,7 @@ class Ledger:
             new_label (str): New label
         """
         for tx in self.get_all_tx():
-            for label_list in (tx.manual_labels.bills, tx.manual_labels.categories, tx.manual_labels.incomes):
+            for label_list in (tx.manual_labels.bills, tx.manual_labels.expenses, tx.manual_labels.incomes):
                 if old_label in label_list:
                     label_list.remove(old_label)
                     label_list.append(new_label)
@@ -386,7 +386,7 @@ class Ledger:
         """Get all transactions with a given label.
 
         Args:
-            label (str): Category to search for
+            label (str): Expense to search for
 
         Returns:
             list[Transaction]: List of transactions with the given label
@@ -395,10 +395,10 @@ class Ledger:
         for tx in self.transactions.values():
             all_labels = (
                 tx.auto_labels.bills
-                + tx.auto_labels.categories
+                + tx.auto_labels.expenses
                 + tx.auto_labels.incomes
                 + tx.manual_labels.bills
-                + tx.manual_labels.categories
+                + tx.manual_labels.expenses
                 + tx.manual_labels.incomes
             )
             if label in all_labels:
@@ -421,10 +421,10 @@ class Ledger:
         transaction = self.get_tx_by_txid(account_number, txid)
         all_labels = (
             transaction.auto_labels.bills
-            + transaction.auto_labels.categories
+            + transaction.auto_labels.expenses
             + transaction.auto_labels.incomes
             + transaction.manual_labels.bills
-            + transaction.manual_labels.categories
+            + transaction.manual_labels.expenses
             + transaction.manual_labels.incomes
         )
         if label not in all_labels:
@@ -438,10 +438,10 @@ class Ledger:
         transaction = self.get_tx_by_txid(account_number, txid)
         all_labels = (
             transaction.auto_labels.bills
-            + transaction.auto_labels.categories
+            + transaction.auto_labels.expenses
             + transaction.auto_labels.incomes
             + transaction.manual_labels.bills
-            + transaction.manual_labels.categories
+            + transaction.manual_labels.expenses
             + transaction.manual_labels.incomes
         )
         for label in transaction.splits:

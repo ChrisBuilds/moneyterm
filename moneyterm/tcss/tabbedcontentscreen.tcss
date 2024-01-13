@@ -299,7 +299,7 @@ BudgetBuilder #builder_hz {
     height: auto;
 }
 
-#category_select {
+#expense_select {
     width: 30;
     height: auto;
 }

@@ -90,7 +90,7 @@ class Labeler(Widget):
         # widgets
         self.type_select_label = Label("Type")
         self.type_select = Select(
-            [("Bills", "Bills"), ("Categories", "Categories"), ("Incomes", "Incomes")],
+            [("Bills", "Bills"), ("Expenses", "Expenses"), ("Incomes", "Incomes")],
             allow_blank=False,
             id="manage_type_select",
         )
@@ -180,7 +180,7 @@ class Labeler(Widget):
             with open(Path("moneyterm/data/labels.json"), "r") as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
-            self.labels = {"Bills": {}, "Categories": {}, "Incomes": {}}
+            self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}
             self.write_labels_json()
         self.update_label_select()
 
@@ -403,7 +403,7 @@ class Labeler(Widget):
         """Scan all transactions and update their labels."""
         for transaction in self.ledger.get_all_tx():
             transaction.auto_labels.bills.clear()
-            transaction.auto_labels.categories.clear()
+            transaction.auto_labels.expenses.clear()
             transaction.auto_labels.incomes.clear()
             for label_type in self.labels:
                 for label in self.labels[label_type]:

@@ -13,7 +13,6 @@ from moneyterm.utils.ledger import Ledger
 from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
-from moneyterm.screens.transactionsplitscreen import TransactionSplitScreen
 from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
@@ -227,7 +226,7 @@ class TabbedContentScreen(Screen):
 
         """
         self.log("Label removed.")
-        self.query_one(Budgeter).handle_category_removed(event.removed_label)
+        self.query_one(Budgeter).handle_expense_removed(event.removed_label)
         self.query_one(TrendSelector).handle_labels_updated()
 
     def on_labeler_label_renamed(self, event: Labeler.LabelRenamed) -> None:
@@ -242,7 +241,7 @@ class TabbedContentScreen(Screen):
 
         """
         self.log("Label renamed.")
-        self.query_one(Budgeter).handle_category_renamed(event.old_label, event.new_label)
+        self.query_one(Budgeter).handle_expense_renamed(event.old_label, event.new_label)
         self.query_one(TrendSelector).handle_labels_updated()
         for transaction_table in self.query(TransactionTable):
             transaction_table.update_data()
@@ -259,7 +258,7 @@ class TabbedContentScreen(Screen):
 
         """
         self.log("Label added.")
-        self.query_one(Budgeter).handle_category_added()
+        self.query_one(Budgeter).handle_expense_added()
         self.query_one(TrendSelector).handle_labels_updated()
 
     def on_config_config_updated(self, event: Config.ConfigUpdated) -> None:
@@ -297,7 +296,7 @@ class TabbedContentScreen(Screen):
         Event handler for when a transaction label is added or removed via the quick label screen/transaction details screen.
 
         Args:
-            event (TransactionTable.QuickCategoryChanged): The event object.
+            event (TransactionTable.QuickExpenseChanged): The event object.
 
         Returns:
             None

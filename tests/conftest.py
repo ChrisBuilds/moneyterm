@@ -64,7 +64,7 @@ def ledger() -> Ledger:
 #     db._execute_query("DELETE FROM transactions WHERE txid = '8008';")
 #     db._execute_query("DELETE FROM accounts WHERE number = '1234';")
 #     db._execute_query("DELETE FROM tags;")
-#     db._execute_query("DELETE FROM categories;")
+#     db._execute_query("DELETE FROM expenses;")
 #     if "8008" in ledger.transactions:
 #         ledger.transactions.pop("8008")
 #     ledger.message_log.clear()

@@ -89,10 +89,10 @@ class TransactionTable(DataTable):
         self.cursor_type = "row"
         all_labels = sorted(
             tx.auto_labels.bills
-            + tx.auto_labels.categories
+            + tx.auto_labels.expenses
             + tx.auto_labels.incomes
             + tx.manual_labels.bills
-            + tx.manual_labels.categories
+            + tx.manual_labels.expenses
             + tx.manual_labels.incomes
         )
         labels_with_splits = []

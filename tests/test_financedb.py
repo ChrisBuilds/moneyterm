@@ -64,32 +64,32 @@ def test_delete_tag_from_db(db):
     assert "delete_tag" not in tags
 
 
-def test_insert_new_category(db):
-    db.insert_category("test_category")
-    categories = [category[1] for category in db.query_categories()]
-    assert "test_category" in categories
+def test_insert_new_expense(db):
+    db.insert_expense("test_expense")
+    expenses = [expense[1] for expense in db.query_expenses()]
+    assert "test_expense" in expenses
 
 
-def test_query_category(db):
-    db.insert_category("test_category")
-    catid, cat = db.query_categories()[0]
-    results = db.query_categories(catid)[0]
+def test_query_expense(db):
+    db.insert_expense("test_expense")
+    catid, cat = db.query_expenses()[0]
+    results = db.query_expenses(catid)[0]
     assert results == (catid, cat)
 
 
-def test_insert_category_already_exists(db):
-    db.insert_category("test_category")
-    db.insert_category("test_category")
-    categories = [category[1] for category in db.query_categories()]
-    assert categories.count("test_category") == 1
+def test_insert_expense_already_exists(db):
+    db.insert_expense("test_expense")
+    db.insert_expense("test_expense")
+    expenses = [expense[1] for expense in db.query_expenses()]
+    assert expenses.count("test_expense") == 1
 
 
-def test_delete_category_from_db(db):
-    db.insert_category("test_category")
-    db.insert_category("delete_category")
-    db.delete_category(category_str="delete_category")
-    categories = [category[1] for category in db.query_categories()]
-    assert "delete_category" not in categories
+def test_delete_expense_from_db(db):
+    db.insert_expense("test_expense")
+    db.insert_expense("delete_expense")
+    db.delete_expense(expense_str="delete_expense")
+    expenses = [expense[1] for expense in db.query_expenses()]
+    assert "delete_expense" not in expenses
 
 
 def test_add_tag_to_tx(db, dbtransaction, account):
@@ -131,40 +131,40 @@ def test_delete_tag_from_tx(db, account, dbtransaction):
     assert not any(tags)
 
 
-def test_add_category_to_tx(db, account, dbtransaction):
+def test_add_expense_to_tx(db, account, dbtransaction):
     db.insert_account(account)
     db.insert_tx(account.number, dbtransaction)
-    db.insert_category("test_category")
-    db.add_category_to_tx(dbtransaction.id, "test_category")
+    db.insert_expense("test_expense")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense")
     tx = db.query_transactions(dbtransaction.id)[0]
-    categories = tx[8:13]
-    assert "test_category" in categories
+    expenses = tx[8:13]
+    assert "test_expense" in expenses
 
 
-def test_add_multiple_categories_to_tx(db, account, dbtransaction):
+def test_add_multiple_expenses_to_tx(db, account, dbtransaction):
     db.insert_account(account)
     db.insert_tx(account.number, dbtransaction)
-    db.insert_category("test_category0")
-    db.insert_category("test_category1")
-    db.insert_category("test_category2")
-    db.insert_category("test_category3")
-    db.insert_category("test_category4")
-    db.add_category_to_tx(dbtransaction.id, "test_category0")
-    db.add_category_to_tx(dbtransaction.id, "test_category1")
-    db.add_category_to_tx(dbtransaction.id, "test_category2")
-    db.add_category_to_tx(dbtransaction.id, "test_category3")
-    db.add_category_to_tx(dbtransaction.id, "test_category4")
+    db.insert_expense("test_expense0")
+    db.insert_expense("test_expense1")
+    db.insert_expense("test_expense2")
+    db.insert_expense("test_expense3")
+    db.insert_expense("test_expense4")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense0")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense1")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense2")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense3")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense4")
     tx = db.query_transactions(dbtransaction.id)[0]
-    categories = tx[8:13]
-    assert len(categories) == 5
+    expenses = tx[8:13]
+    assert len(expenses) == 5
 
 
-def test_delete_category_from_tx(db, account, dbtransaction):
+def test_delete_expense_from_tx(db, account, dbtransaction):
     db.insert_account(account)
     db.insert_tx(account.number, dbtransaction)
-    db.insert_category("test_category")
-    db.add_category_to_tx(dbtransaction.id, "test_category")
-    db.remove_category_from_tx(dbtransaction.id, "test_category")
+    db.insert_expense("test_expense")
+    db.add_expense_to_tx(dbtransaction.id, "test_expense")
+    db.remove_expense_from_tx(dbtransaction.id, "test_expense")
     tx = db.query_transactions(dbtransaction.id)[0]
-    categories = tx[8:13]
-    assert not any(categories)
+    expenses = tx[8:13]
+    assert not any(expenses)

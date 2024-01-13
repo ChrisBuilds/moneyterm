@@ -105,10 +105,10 @@ class TransactionSplitScreen(ModalScreen):
             yield Rule()
             for label in (
                 self.transaction.auto_labels.bills
-                + self.transaction.auto_labels.categories
+                + self.transaction.auto_labels.expenses
                 + self.transaction.auto_labels.incomes
                 + self.transaction.manual_labels.bills
-                + self.transaction.manual_labels.categories
+                + self.transaction.manual_labels.expenses
                 + self.transaction.manual_labels.incomes
             ):
                 yield LabelValue(label, "")

@@ -28,7 +28,7 @@ from dateutil.relativedelta import relativedelta  # type: ignore
 
 
 class BudgetBuilder(Widget):
-    selected_category: reactive[str | NoSelection] = reactive(NoSelection)
+    selected_expense: reactive[str | NoSelection] = reactive(NoSelection)
 
     class BudgetAdded(Message):
         """Message sent when a budget is added/modified."""
@@ -41,8 +41,8 @@ class BudgetBuilder(Widget):
         self.border_title = "Budget Builder"
         self.ledger = ledger
         self.budgets = budgets
-        self.category_select_label = Label("Category", id="category_select_label")
-        self.category_select: Select[str] = Select([("a", "a")], id="category_select", prompt="Select a category")
+        self.expense_select_label = Label("Expense", id="expense_select_label")
+        self.expense_select: Select[str] = Select([("a", "a")], id="expense_select", prompt="Select a expense")
         self.monthly_budget_input = self.amount_input = Input(
             placeholder="Ex: 150.00",
             restrict=r"[0-9\.\-]*",
@@ -58,8 +58,8 @@ class BudgetBuilder(Widget):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="builder_hz"):
-            yield self.category_select_label
-            yield self.category_select
+            yield self.expense_select_label
+            yield self.expense_select
             yield self.monthly_budget_input
             yield self.save_budgets_button
 
@@ -73,12 +73,12 @@ class BudgetBuilder(Widget):
         except:
             return False
 
-    @on(Select.Changed, "#category_select")
-    def on_category_select_change(self, event: Select.Changed):
+    @on(Select.Changed, "#expense_select")
+    def on_expense_select_change(self, event: Select.Changed):
         if event.value == Select.BLANK:
-            self.selected_category = NoSelection()
+            self.selected_expense = NoSelection()
         else:
-            self.selected_category = str(event.value)
+            self.selected_expense = str(event.value)
 
     @on(Input.Changed, "#monthly_budget_input")
     def on_monthly_budget_input_change(self, event: Input.Changed):
@@ -89,25 +89,25 @@ class BudgetBuilder(Widget):
 
     @on(Button.Pressed, "#save_budgets_button")
     def on_save_budgets_button_press(self, event: Button.Pressed):
-        if isinstance(self.selected_category, NoSelection):
-            self.notify("A category must be selected to add a budget", severity="error", title="No Category Selected")
+        if isinstance(self.selected_expense, NoSelection):
+            self.notify("A expense must be selected to add a budget", severity="error", title="No Expense Selected")
             return
 
-        self.budgets[self.selected_category] = {"monthly_budget": self.monthly_budget_input.value}
+        self.budgets[self.selected_expense] = {"monthly_budget": self.monthly_budget_input.value}
         self.post_message(self.BudgetAdded())
 
-    def watch_selected_category(self) -> None:
-        if isinstance(self.selected_category, NoSelection):
+    def watch_selected_expense(self) -> None:
+        if isinstance(self.selected_expense, NoSelection):
             self.monthly_budget_input.value = ""
         else:
-            if self.selected_category in self.budgets:
-                self.monthly_budget_input.value = self.budgets[self.selected_category]["monthly_budget"]
+            if self.selected_expense in self.budgets:
+                self.monthly_budget_input.value = self.budgets[self.selected_expense]["monthly_budget"]
 
-    def update_category_select(self, labels: dict[str, LabelType]):
-        if "Categories" in labels:
-            options = [(category, category) for category in labels["Categories"]]
+    def update_expense_select(self, labels: dict[str, LabelType]):
+        if "Expenses" in labels:
+            options = [(expense, expense) for expense in labels["Expenses"]]
             options.sort(key=lambda x: x[0].lower())
-            self.category_select.set_options(options)
+            self.expense_select.set_options(options)
 
 
 class Budgeter(Widget):
@@ -145,7 +145,7 @@ class Budgeter(Widget):
 
         # load labels from labels json
         self.load_labels_from_json()
-        self.builder.update_category_select(self.labels)
+        self.builder.update_expense_select(self.labels)
 
     def load_labels_from_json(self) -> None:
         try:
@@ -164,16 +164,16 @@ class Budgeter(Widget):
             json.dump(self.budgets, f, indent=4)
 
     def update_budgets_table(self) -> None:
-        def get_budget_stats_for_month(month: int, year: int, budget_category: str) -> tuple[Decimal, Decimal]:
-            # get transactions with the category
-            transactions = self.ledger.get_all_tx_with_label(budget_category)
+        def get_budget_stats_for_month(month: int, year: int, budget_expense: str) -> tuple[Decimal, Decimal]:
+            # get transactions with the expense
+            transactions = self.ledger.get_all_tx_with_label(budget_expense)
             # get transactions for the current month
             current_month_transactions = [tx for tx in transactions if tx.date.month == month and tx.date.year == year]
             # total transactions amount (abs value)
             total_transactions_amount = Decimal(0)
             for transaction in current_month_transactions:
-                if budget_category in transaction.splits:
-                    total_transactions_amount += transaction.splits[budget_category]
+                if budget_expense in transaction.splits:
+                    total_transactions_amount += transaction.splits[budget_expense]
                 else:
                     total_transactions_amount += abs(transaction.amount)
             # remaining budget
@@ -181,7 +181,7 @@ class Budgeter(Widget):
             return (total_transactions_amount, remaining_budget)
 
         budgets_table = Table(title=f"Budgets {datetime.strftime(datetime.now(), '%B %Y')}", box=box.SIMPLE)
-        budgets_table.add_column("Category")
+        budgets_table.add_column("Expense")
         budgets_table.add_column("Monthly Budget")
         budgets_table.add_column("Spent")
         budgets_table.add_column("Remaining")
@@ -193,16 +193,16 @@ class Budgeter(Widget):
             return
         row_added = False
         last_month = datetime.now() - relativedelta(months=1)
-        for budget_category in sorted(list(self.budgets)):
-            for _, budget_amount in self.budgets[budget_category].items():
+        for budget_expense in sorted(list(self.budgets)):
+            for _, budget_amount in self.budgets[budget_expense].items():
                 if not budget_amount:
                     continue
                 decimal_budget_amount = Decimal(budget_amount)
                 last_month_spent, last_month_remaining = get_budget_stats_for_month(
-                    last_month.month, last_month.year, budget_category
+                    last_month.month, last_month.year, budget_expense
                 )
                 total_transactions_amount, remaining_budget = get_budget_stats_for_month(
-                    datetime.now().month, datetime.now().year, budget_category
+                    datetime.now().month, datetime.now().year, budget_expense
                 )
                 remaining_budget_colored = Text(f"${remaining_budget}")
                 if remaining_budget > 0:
@@ -215,7 +215,7 @@ class Budgeter(Widget):
                 else:
                     last_month_remaining_colored.stylize("bold red")
                 budgets_table.add_row(
-                    budget_category,
+                    budget_expense,
                     f"${decimal_budget_amount}",
                     f"${total_transactions_amount}",
                     remaining_budget_colored,
@@ -228,22 +228,22 @@ class Budgeter(Widget):
             return
         self.budgets_table_static.update(budgets_table)
 
-    def handle_category_renamed(self, old_category: str, new_category: str):
-        if old_category in self.budgets:
-            self.budgets[new_category] = self.budgets.pop(old_category)
+    def handle_expense_renamed(self, old_expense: str, new_expense: str):
+        if old_expense in self.budgets:
+            self.budgets[new_expense] = self.budgets.pop(old_expense)
             self.write_budgets_json()
             self.update_budgets_table()
         self.load_labels_from_json()
-        self.builder.update_category_select(self.labels)
+        self.builder.update_expense_select(self.labels)
 
-    def handle_category_removed(self, category: str):
-        if category in self.budgets:
-            del self.budgets[category]
+    def handle_expense_removed(self, expense: str):
+        if expense in self.budgets:
+            del self.budgets[expense]
             self.write_budgets_json()
             self.update_budgets_table()
         self.load_labels_from_json()
-        self.builder.update_category_select(self.labels)
+        self.builder.update_expense_select(self.labels)
 
-    def handle_category_added(self):
+    def handle_expense_added(self):
         self.load_labels_from_json()
-        self.builder.update_category_select(self.labels)
+        self.builder.update_expense_select(self.labels)
