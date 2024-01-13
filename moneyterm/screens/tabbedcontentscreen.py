@@ -13,13 +13,11 @@ from moneyterm.utils.ledger import Ledger
 from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
+from moneyterm.screens.transactionsplitscreen import TransactionSplitScreen
 from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
-from moneyterm.widgets.config import Config
-
-
-DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}}
+from moneyterm.widgets.config import Config, DEFAULT_CONFIG
 
 
 class TabbedContentScreen(Screen):
@@ -82,7 +80,7 @@ class TabbedContentScreen(Screen):
         self.load_config_json()
         self.import_transactions()
         scope_select_bar = self.query_one(ScopeSelectBar)
-        scope_select_bar.show_latest()
+        scope_select_bar.show_latest(self.config["default_account"])
 
     def load_config_json(self) -> None:
         """
@@ -152,7 +150,7 @@ class TabbedContentScreen(Screen):
         }
         import_state = False
         for file in import_dir.iterdir():
-            if file.suffix == self.config["import_extension"]:
+            if file.suffix.casefold() == self.config["import_extension"].casefold():
                 load_results = self.ledger.load_ofx_data(file)
                 import_state = True
                 if any(load_results.values()):
@@ -300,6 +298,20 @@ class TabbedContentScreen(Screen):
 
         Args:
             event (TransactionTable.QuickCategoryChanged): The event object.
+
+        Returns:
+            None
+
+        """
+        self.query_one(Budgeter).update_budgets_table()
+        self.overview_widget.update_tables(self.selected_account, self.selected_year, self.selected_month)
+
+    def on_transaction_table_transaction_split_modified(self, event: TransactionTable.TransactionSplitModified) -> None:
+        """
+        Event handler for when a transaction split is modified.
+
+        Args:
+            event (TransactionSplitScreen.TransactionSplitModified): The event object.
 
         Returns:
             None
