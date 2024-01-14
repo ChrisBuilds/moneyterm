@@ -25,7 +25,7 @@
 
 ## MoneyTerm
 
-MoneyTerm is a TUI based expense and budget tracker with the following features:
+MoneyTerm is a Textual/Rich TUI based expense and budget tracker with the following features:
 * QFX/OFX Importing
 * Transaction Table View
 * Automatic/Manual Transaction Labeling
@@ -34,7 +34,12 @@ MoneyTerm is a TUI based expense and budget tracker with the following features:
 
 ## Requirements
 
-MoneyTerm uses the Textual and Rich libraries.
+* python = "^3.10"
+* ofxparse = "^0.21"
+* textual = "^0.44.0"
+* rich = "^13.7.0"
+* python-dateutil = "^2.8.2"
+* textual-plotext = "^0.2.1"
 
 ## Installation
 
