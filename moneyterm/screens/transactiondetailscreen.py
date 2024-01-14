@@ -51,6 +51,17 @@ class TransactionDetailScreen(ModalScreen):
         self.label_removed = False
         self.id = "transaction_detail_screen"
         self.vertical = Vertical()
+        if self.transaction.splits:
+            untracked = abs(self.transaction.amount) - sum(self.transaction.splits.values())
+            splits_string = ""
+            for label, amount in self.transaction.splits.items():
+                splits_string += f"{label} (${amount:.2f}) | "
+            if untracked:
+                splits_string += f"Untracked (${untracked:.2f})"
+            else:
+                splits_string = splits_string[:-3]
+        else:
+            splits_string = "None"
         self.markdown = f"""**Transaction ID** : {self.transaction.txid}
         
 **Date** : {self.transaction.date}
@@ -63,7 +74,9 @@ class TransactionDetailScreen(ModalScreen):
 
 **Type** : {self.transaction.tx_type}
 
-**Amount** : {self.transaction.amount}
+**Amount** : ${self.transaction.amount:.2f}
+
+**Splits**: {splits_string}
 
 **Account Number** : {self.transaction.account.number}
 
