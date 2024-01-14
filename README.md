@@ -24,8 +24,6 @@
 
 
 ## MoneyTerm
-![unstable_demo](https://github.com/ChrisBuilds/terminaltexteffects/assets/57874186/2e4b6e51-2b65-4765-a41c-92542981c77c)
-
 
 MoneyTerm is a TUI based expense and budget tracker with the following features:
 * QFX/OFX Importing
@@ -66,6 +64,8 @@ MoneyTerm uses the Textual and Rich libraries.
 #### Budgeting
 ![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/55266870-1f20-4fde-945a-5552a4e44a94)
 
+#### Overview (in progress)
+![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/669794a7-ff3e-4d16-b851-2d3e76bd0eb9)
 
 
 
