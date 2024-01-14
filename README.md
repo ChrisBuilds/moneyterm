@@ -44,7 +44,7 @@ MoneyTerm uses the Textual and Rich libraries.
 
 ## Feature Screenshots
 #### Transaction Table
-![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/296212ab-ad60-4c8e-9560-7872bea4a347)
+![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/74793183-1a45-4432-abaa-fcd465bc40d4)
 
 #### Transaction Details
 ![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/00ef9345-3d2a-49c7-a8f4-1e583e341906)
