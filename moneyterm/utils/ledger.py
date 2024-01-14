@@ -432,7 +432,8 @@ class Ledger:
         if amount > 0:
             transaction.splits[label] = amount
         else:
-            transaction.splits.pop(label)
+            if label in transaction.splits:
+                transaction.splits.pop(label)
 
     def validate_split_labels(self, account_number: str, txid: str) -> None:
         transaction = self.get_tx_by_txid(account_number, txid)
