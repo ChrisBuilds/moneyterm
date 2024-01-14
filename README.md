@@ -15,11 +15,7 @@
 * [About](#tte)
 * [Requirements](#requirements)
 * [Installation](#installation)
-* [Usage](#usage)
-* [Options](#options)
-* [Examples](#examples)
-* [In-Development Preview](#in-development-preview)
-* [Recent Changes](#recent-changes)
+* [Screenshots](#screenshots)
 * [License](#license)
 
 
@@ -47,7 +43,7 @@ MoneyTerm is a Textual/Rich TUI based expense and budget tracker with the follow
 *Still in development, unreleased.
 
 
-## Feature Screenshots
+## Screenshots
 #### Transaction Table
 ![image](https://github.com/ChrisBuilds/moneyterm/assets/57874186/74793183-1a45-4432-abaa-fcd465bc40d4)
 
