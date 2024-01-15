@@ -181,12 +181,12 @@ class Budgeter(Widget):
             return (total_transactions_amount, remaining_budget)
 
         budgets_table = Table(title=f"Budgets {datetime.strftime(datetime.now(), '%B %Y')}", box=box.SIMPLE)
-        budgets_table.add_column("Expense")
-        budgets_table.add_column("Monthly Budget")
-        budgets_table.add_column("Spent")
-        budgets_table.add_column("Remaining")
-        budgets_table.add_column("Last Month Spent")
-        budgets_table.add_column("Last Month Remaining")
+        budgets_table.add_column("Expense", justify="center")
+        budgets_table.add_column("Monthly Budget", justify="center")
+        budgets_table.add_column("Spent", justify="center")
+        budgets_table.add_column("Remaining", justify="center")
+        budgets_table.add_column("Last Month Spent", justify="center")
+        budgets_table.add_column("Last Month Remaining", justify="center")
 
         if not self.budgets:
             self.budgets_table_static.update("No budgets set.")
