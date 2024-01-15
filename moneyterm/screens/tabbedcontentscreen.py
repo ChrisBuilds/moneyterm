@@ -28,6 +28,9 @@ class TabbedContentScreen(Screen):
 
     Attributes:
         ledger (Ledger): The ledger object containing financial data.
+        selected_account (str | NoSelection): The currently selected account.
+        selected_year (int | NoSelection): The currently selected year.
+        selected_month (int | NoSelection): The currently selected month.
 
     """
 

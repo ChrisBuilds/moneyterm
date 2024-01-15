@@ -49,6 +49,29 @@ LabelType = dict[str, MatchLabel]
 
 
 class Labeler(Widget):
+    """
+    A widget for managing labels in the MoneyTerm application.
+
+    This widget allows the user to create, rename, remove, and select labels for categorizing transactions.
+    It also provides options for filtering transactions based on various criteria such as date, memo, payee, and amount.
+
+    Attributes:
+        selected_type (reactive[str]): The currently selected label type.
+        selected_label (reactive[str | NoSelection]): The currently selected label.
+        selected_match_option (reactive[Option | None]): The currently selected match option.
+        BINDINGS (List[Tuple[str, str, str]]): A list of key bindings for the widget.
+        ledger (Ledger): The ledger object used for managing transactions.
+        labels (Dict[str, LabelType]): A dictionary containing the labels for different types.
+
+    Methods:
+        write_labels_json(self): Writes the labels dictionary to a JSON file.
+        action_clear_input(self) -> None: Clears the input field if it is currently focused.
+        on_manage_type_select_change(self, event: Select.Changed) -> None: Handles the change event of the manage type select widget.
+        on_label_select_change(self, event: Select.Changed) -> None: Handles the event when the label selection changes.
+        on_matches_option_list_select(self, event: OptionList.OptionSelected) -> None: Handles the event when an option is selected from the matches option list.
+        on_create_new_label_button_press(self, event: Button.Pressed) -> None: Event handler for the 'create new label' button press.
+    """
+
     class LabelsUpdated(Message):
         """Message sent when labels are updated."""
 
@@ -185,6 +208,10 @@ class Labeler(Widget):
         self.update_label_select()
 
     def write_labels_json(self):
+        """
+        Writes the labels dictionary to a JSON file.
+
+        """
         with open(Path("moneyterm/data/labels.json"), "w") as f:
             json.dump(self.labels, f, indent=4)
 
@@ -252,16 +279,37 @@ class Labeler(Widget):
             yield self.preview_table
 
     def action_clear_input(self) -> None:
+        """
+        Clears the input field if it is currently focused.
+
+        This method checks if the currently focused widget is an instance of the Input class,
+        and if so, it clears the input field.
+        """
         focused = self.app.focused
         if isinstance(focused, Input):
             focused.clear()
 
     @on(Select.Changed, "#manage_type_select")
     def on_manage_type_select_change(self, event: Select.Changed) -> None:
+        """
+        Handle the change event of the manage type select widget.
+
+        Args:
+            event (Select.Changed): The event object containing the new selected value.
+        """
         self.selected_type = str(event.value)
 
     @on(Select.Changed, "#label_select")
     def on_label_select_change(self, event: Select.Changed) -> None:
+        """
+        Handles the event when the label selection changes.
+
+        Args:
+            event (Select.Changed): The event object containing the changed value.
+
+        Returns:
+            None
+        """
         if self.label_select.is_blank():
             self.selected_label = NoSelection()
         else:
@@ -269,16 +317,37 @@ class Labeler(Widget):
 
     @on(OptionList.OptionSelected, "#matches_option_list")
     def on_matches_option_list_select(self, event: OptionList.OptionSelected) -> None:
+        """
+        Handles the event when an option is selected from the matches option list.
+
+        Args:
+            event (OptionList.OptionSelected): The event object containing the selected option.
+        """
         self.selected_match_option = event.option
 
     @on(Button.Pressed, "#create_new_label_button")
     def on_create_new_label_button_press(self, event: Button.Pressed) -> None:
+        """
+        Event handler for the 'create new label' button press.
+
+        Retrieves all existing labels and pushes the 'AddLabelScreen' with the list of labels
+        to allow the user to create a new label.
+        """
         all_labels = []
         for label_type in self.labels:
             all_labels.extend(list(self.labels[label_type]))
         self.app.push_screen(AddLabelScreen(list(all_labels)), self.create_new_label)
 
     def create_new_label(self, new_label_name: str) -> None:
+        """
+        Creates a new label with the given name and adds it to the labels dictionary.
+
+        Args:
+            new_label_name (str): The name of the new label.
+
+        Returns:
+            None
+        """
         self.labels[self.selected_type][new_label_name] = {}
         self.write_labels_json()
         self.update_label_select(set_selection=new_label_name)
@@ -286,6 +355,20 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#remove_label_button")
     def on_remove_label_button_press(self, event: Button.Pressed) -> None:
+        """
+        Handles the button press event for removing a label.
+
+        If the selected label is of type NoSelection, the method returns without performing any action.
+        Otherwise, it prompts the user with a confirmation message, including the number of matches associated with the label.
+        If the user confirms the removal, the selected label and its matches are removed from the application.
+        If the label is manually applied to a transaction or used in a transaction split, the split/label will also be removed.
+
+        Args:
+            event (Button.Pressed): The button press event.
+
+        Returns:
+            None
+        """
         if isinstance(self.selected_label, NoSelection):
             return
         match_count = len(self.labels[self.selected_type][self.selected_label])
@@ -293,6 +376,15 @@ class Labeler(Widget):
         self.app.push_screen(ConfirmScreen(message), self.remove_selected_label)
 
     def remove_selected_label(self, confirm: bool) -> None:
+        """
+        Removes the selected label from the labeler.
+
+        Args:
+            confirm (bool): Flag indicating whether to confirm the removal.
+
+        Returns:
+            None
+        """
         if isinstance(self.selected_label, NoSelection):
             return
         if confirm:
@@ -306,6 +398,15 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#rename_label_button")
     def on_rename_label_button_press(self, event: Button.Pressed) -> None:
+        """
+        Handles the button press event for renaming a label.
+
+        Args:
+            event (Button.Pressed): The button press event.
+
+        Returns:
+            None
+        """
         if isinstance(self.selected_label, NoSelection):
             return
         self.app.push_screen(
@@ -313,6 +414,15 @@ class Labeler(Widget):
         )
 
     def rename_label(self, new_label_name: str) -> None:
+        """
+        Renames the selected label to the specified new label name.
+
+        Args:
+            new_label_name (str): The new name for the label.
+
+        Returns:
+            None
+        """
         if isinstance(self.selected_label, NoSelection):
             return
         old_label = self.selected_label
@@ -324,6 +434,14 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#save_button")
     def on_save_button_press(self, event: Button.Pressed) -> None:
+        """
+        Handles the event when the save button is pressed.
+
+        Saves the selected label with the specified match fields and their values to the labels dictionary.
+        Writes the updated labels dictionary to a JSON file.
+        Updates the match options list and selects the saved match name.
+        Scans and updates the transactions based on the updated labels.
+        """
         if isinstance(self.selected_label, NoSelection):
             return
         if not self.validate_match_fields():
@@ -348,6 +466,15 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#remove_match_button")
     def on_remove_match_button_press(self, event: Button.Pressed) -> None:
+        """
+        Handles the button press event for removing a match.
+
+        Args:
+            event (Button.Pressed): The button press event.
+
+        Returns:
+            None
+        """
         # verify valid label and match option are selected
         if (
             self.selected_match_option is None
@@ -359,6 +486,15 @@ class Labeler(Widget):
         self.app.push_screen(ConfirmScreen(message), self.remove_selected_match)
 
     def remove_selected_match(self, confirm: bool) -> None:
+        """
+        Removes the selected match option from the labels dictionary and performs necessary updates.
+
+        Args:
+            confirm (bool): Indicates whether to confirm the removal.
+
+        Returns:
+            None
+        """
         if (
             self.selected_match_option is None
             or self.selected_match_option.id is None
@@ -373,6 +509,26 @@ class Labeler(Widget):
 
     @on(Button.Pressed, "#preview_button")
     def on_preview_button_press(self, event: Button.Pressed) -> None:
+        """
+        Handle the button press event for the preview button.
+
+        This method is called when the preview button is pressed. It retrieves the selected account, year, and month
+        from the corresponding select widgets. If any of these values are not selected, it displays an error notification
+        and returns.
+
+        It then retrieves the transactions for the selected account, year, and month from the ledger. If the match fields
+        are not valid, it returns without adding any transaction rows to the preview table.
+
+        For each transaction, it checks if it matches the specified match fields. If it does, it adds the transaction row
+        to the preview table. If the 'show_all_tx_checkbox' is checked, it adds all transactions to the preview table,
+        regardless of whether they match the specified match fields.
+
+        Args:
+            event (Button.Pressed): The button press event.
+
+        Returns:
+            None
+        """
         account_select: Select = self.app.query_one("#account_select", expect_type=Select)
         year_select: Select = self.app.query_one("#year_select", expect_type=Select)
         month_select: Select = self.app.query_one("#month_select", expect_type=Select)
@@ -420,6 +576,15 @@ class Labeler(Widget):
         self.post_message(self.LabelsUpdated())
 
     def on_transaction_table_row_sent(self, message: TransactionTable.RowSent) -> None:
+        """
+        Handles the event when a row is sent from the transaction table.
+
+        Args:
+            message (TransactionTable.RowSent): The message containing the account number and transaction ID.
+
+        Returns:
+            None
+        """
         transaction = self.ledger.get_tx_by_txid(message.account_number, message.txid)
         self.start_date_input.value = transaction.date.strftime("%m/%d/%Y")
         self.end_date_input.value = transaction.date.strftime("%m/%d/%Y")
@@ -432,6 +597,12 @@ class Labeler(Widget):
         self.type_input.value = transaction.tx_type
 
     def get_match_fields(self) -> MatchFields:
+        """
+        Returns a dictionary containing the match fields and their corresponding values.
+
+        Returns:
+            MatchFields: A dictionary containing the match fields and their values.
+        """
         return {
             "start_date": self.start_date_input.value,
             "end_date": self.end_date_input.value,
@@ -448,6 +619,15 @@ class Labeler(Widget):
         }
 
     def validate_date_format(self, date_str: str) -> bool:
+        """
+        Validates the format of a date string.
+
+        Args:
+            date_str (str): The date string to be validated.
+
+        Returns:
+            bool: True if the date string is in the format "%m/%d/%Y", False otherwise.
+        """
         try:
             datetime.strptime(date_str, "%m/%d/%Y")
             return True
@@ -455,6 +635,15 @@ class Labeler(Widget):
             return False
 
     def validate_end_date_after_start_date(self, end_date: str) -> bool:
+        """
+        Validates if the end date is after the start date.
+
+        Args:
+            end_date (str): The end date to be validated.
+
+        Returns:
+            bool: True if the end date is after the start date, False otherwise.
+        """
         if not self.start_date_input.value:
             return True
         try:
@@ -465,6 +654,15 @@ class Labeler(Widget):
             return False
 
     def validate_amount_is_decimal(self, amount: str) -> bool:
+        """
+        Validates if the given amount is a decimal number.
+
+        Args:
+            amount (str): The amount to be validated.
+
+        Returns:
+            bool: True if the amount is a decimal number, False otherwise.
+        """
         try:
             Decimal(amount)
             return True
@@ -472,6 +670,12 @@ class Labeler(Widget):
             return False
 
     def validate_match_fields(self) -> bool:
+        """
+        Validates the match fields and returns True if all fields are valid, False otherwise.
+
+        Returns:
+            bool: True if all fields are valid, False otherwise.
+        """
         # require a Match Name
         validated = True
         if not self.match_name_input.value:
@@ -557,6 +761,10 @@ class Labeler(Widget):
             self.rename_label_button.disabled = False
 
     def watch_selected_match_option(self) -> None:
+        """
+        Updates the widget's input fields with the values of the selected match option.
+        If no match option is selected or the selected label is a NoSelection, clears all input fields.
+        """
         if self.selected_match_option is None or isinstance(self.selected_label, NoSelection):
             self.remove_match_button.disabled = True
             self.start_date_input.clear()
@@ -637,4 +845,10 @@ class Labeler(Widget):
         return True
 
     def get_labels(self) -> dict[str, LabelType]:
+        """
+        Returns the labels dictionary.
+
+        Returns:
+            dict[str, LabelType]: The labels dictionary.
+        """
         return self.labels

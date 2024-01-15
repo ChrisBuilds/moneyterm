@@ -6,6 +6,21 @@ from textual.containers import Vertical, Horizontal
 
 
 class RenameLabelScreen(ModalScreen):
+    """
+    A screen for renaming a label.
+
+    Args:
+        selected_label (str): The label to be renamed.
+        existing_labels (list[str]): List of existing labels.
+
+    Attributes:
+        CSS_PATH (str): The path to the CSS file for styling the screen.
+        existing_labels (list[str]): List of existing labels.
+        instructions_label (Label): The label displaying instructions for renaming the label.
+        new_label_input (Input): The input field for entering the new label name.
+        container_vertical (Vertical): The vertical container for organizing the screen elements.
+    """
+
     CSS_PATH = "../tcss/renamelabelscreen.tcss"
 
     def __init__(self, selected_label, existing_labels: list[str]) -> None:
@@ -37,7 +52,14 @@ class RenameLabelScreen(ModalScreen):
 
     @on(Button.Pressed, "#rename_label_button")
     def rename_label_button(self) -> None:
-        """Add a new label to the list of existing labels."""
+        """
+        Add a new label to the list of existing labels.
+
+        This function checks if the new label name already exists in the list of existing labels.
+        If it does, an error notification is displayed.
+        If the new label name is empty, an error notification is displayed.
+        Otherwise, the function dismisses the screen with the new label name.
+        """
         new_label_name = self.new_label_input.value
         if new_label_name in self.existing_labels:
             self.notify("Label already exists!", title="Error", severity="error")

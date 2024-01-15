@@ -93,7 +93,16 @@ class Transaction:
 
 
 class Ledger:
+    """A class representing a ledger.
+
+    Attributes:
+        accounts (dict[str, Account]): A dictionary of accounts.
+        transactions (dict[tuple[str, str], Transaction]): A dictionary of transactions.
+        pickle_path (Path): The path to the pickle file.
+    """
+
     def __init__(self) -> None:
+        """Initialize a new instance of the Ledger class."""
         self.accounts: dict[str, Account] = dict()
         self.transactions: dict[tuple[str, str], Transaction] = dict()
         self.pickle_path = Path("moneyterm/data/ledger.pkl")
@@ -133,10 +142,14 @@ class Ledger:
             raise
 
     def load_ofx_data(self, data_file: Path) -> dict[str, int]:
-        """Load OFX data from a file.
+        """
+        Load OFX data from a file.
 
         Args:
             data_file (Path): Path to the OFX file.
+
+        Returns:
+            dict[str, int]: A dictionary containing the number of accounts added, transactions added, and transactions ignored.
         """
         load_results = {"accounts_added": 0, "transactions_added": 0, "transactions_ignored": 0}
         if not data_file.exists():
@@ -337,6 +350,17 @@ class Ledger:
                 manual_labels.sort()
 
     def remove_label_from_tx(self, account_number: str, txid: str, label_str: str) -> None:
+        """
+        Removes a label from a transaction.
+
+        Args:
+            account_number (str): The account number associated with the transaction.
+            txid (str): The ID of the transaction.
+            label_str (str): The label to be removed.
+
+        Returns:
+            None
+        """
         transaction = self.get_tx_by_txid(account_number, txid)
         for label_list in (
             transaction.manual_labels.bills,
@@ -436,6 +460,20 @@ class Ledger:
                 transaction.splits.pop(label)
 
     def validate_split_labels(self, account_number: str, txid: str) -> None:
+        """
+        Validates the split labels of a transaction.
+
+        This function checks if all the split labels of a transaction are valid.
+        A split label is considered valid if it exists in any of the auto_labels or manual_labels
+        of the transaction. If a split label is not valid, it is removed from the transaction's splits.
+
+        Args:
+            account_number (str): The account number associated with the transaction.
+            txid (str): The transaction ID.
+
+        Returns:
+            None
+        """
         transaction = self.get_tx_by_txid(account_number, txid)
         all_labels = (
             transaction.auto_labels.bills

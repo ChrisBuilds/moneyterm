@@ -9,6 +9,16 @@ from textual.containers import Vertical, Horizontal
 
 
 class AddLabelScreen(ModalScreen):
+    """
+    Represents a screen for adding a new label.
+
+    Attributes:
+        CSS_PATH (str): The path to the CSS file for styling the screen.
+        existing_labels (list[str]): List of existing labels.
+        new_label_input (Input): Input field for entering the new label name.
+        container_vertical (Vertical): Vertical container for organizing the screen elements.
+    """
+
     CSS_PATH = "../tcss/addlabelscreen.tcss"
 
     def __init__(self, existing_labels: list[str]) -> None:
@@ -24,6 +34,12 @@ class AddLabelScreen(ModalScreen):
         self.container_vertical.border_title = "Add Label"
 
     def compose(self) -> ComposeResult:
+        """
+        Compose the screen by defining the layout and components.
+
+        Yields:
+            Composeable: The components to be rendered on the screen.
+        """
         with self.container_vertical:
             with Horizontal(id="add_label_horizontal"):
                 yield self.new_label_input
@@ -38,7 +54,14 @@ class AddLabelScreen(ModalScreen):
 
     @on(Button.Pressed, "#add_label_button")
     def add_label_button(self) -> None:
-        """Add a new label to the list of existing labels."""
+        """
+        Add a new label to the list of existing labels.
+
+        This function takes the value from the `new_label_input` and checks if it already exists in the `existing_labels` list.
+        If the label already exists, an error notification is displayed.
+        If the label name is empty, an error notification is displayed.
+        Otherwise, the function dismisses the screen and returns the new label name.
+        """
         new_label_name = self.new_label_input.value
         if new_label_name in self.existing_labels:
             self.notify(

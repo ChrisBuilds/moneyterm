@@ -18,7 +18,12 @@ DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_alias
 
 
 class Config(Widget):
-    """Widget for configuring settings."""
+    """Widget for configuring settings.
+
+    This widget provides a user interface for configuring various settings, such as import directory, extension,
+    account aliases, and default account. It allows the user to input values and save the configuration to a JSON file.
+    The widget also provides functionality for importing transactions and sending messages when the configuration is updated.
+    """
 
     class ConfigUpdated(Message):
         """Message sent when labels are updated."""
@@ -38,6 +43,17 @@ class Config(Widget):
 
         Args:
             ledger (Ledger): The ledger object.
+
+        Attributes:
+            ledger (Ledger): The ledger object.
+            config (dict): The configuration settings.
+            directory_input (Input): The input field for the import directory path.
+            extension_input (Input): The input field for the import file extension.
+            alias_account_select (Select): The select field for choosing an account for aliasing.
+            alias_account_input (Input): The input field for entering an alias for the selected account.
+            save_config_button (Button): The button for saving the configuration.
+            default_account_select (Select): The select field for choosing a default account.
+            import_transactions_button (Button): The button for importing transactions.
         """
         super().__init__()
         self.ledger = ledger
@@ -94,6 +110,13 @@ class Config(Widget):
     def on_mount(self) -> None:
         """
         Perform actions when the widget is mounted.
+
+        This method is called when the widget is mounted and performs the following actions:
+        1. Loads the configuration from a JSON file.
+        2. Sets the values of the directory_input and extension_input widgets based on the loaded configuration.
+        3. Sets the value of the default_account_select widget based on the loaded configuration, if it is a string.
+        4. Clears the default_account_select widget if the loaded configuration does not have a valid default account.
+
         """
         self.load_config_json()
         if isinstance(self.config["import_directory"], str):
@@ -111,6 +134,19 @@ class Config(Widget):
     def refresh_config(self) -> None:
         """
         Refresh the configuration.
+
+        This method updates the widget's configuration based on the values stored in the `config` attribute.
+        It sets the values of the `directory_input` and `extension_input` widgets based on the `import_directory`
+        and `import_extension` values in the `config` dictionary, respectively.
+
+        It also updates the options of the `alias_account_select` and `default_account_select` widgets based on
+        the accounts stored in the `ledger` attribute. If a `default_account` is specified in the `config` dictionary,
+        it sets the value of the `default_account_select` widget to that account, if it exists in the ledger.
+
+        If the `default_account` value is invalid or not specified, it clears the `default_account_select` widget.
+
+        Note: This method assumes that the `config` attribute is a dictionary containing the necessary configuration values,
+        and that the `ledger` attribute is an object with an `accounts` attribute representing a collection of accounts.
         """
         if isinstance(self.config["import_directory"], str):
             self.directory_input.value = self.config["import_directory"]

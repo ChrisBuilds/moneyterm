@@ -13,21 +13,34 @@ from moneyterm.utils.ledger import Ledger, Transaction
 
 
 class ManualLabelButtons(Widget):
-    """Widget for displaying the manual labels of a transaction."""
+    """Widget for displaying the manual labels of a transaction.
+
+    This widget is responsible for displaying the manual labels of a transaction.
+
+    Attributes:
+        manual_labels (list[str]): A list of manual labels of the transaction.
+        id (str): The ID of the widget.
+
+    """
 
     def __init__(self, tx: Transaction) -> None:
         """Initialize the widget.
 
         Args:
             tx (Transaction): Transaction object
-        """
 
+        """
         super().__init__()
         self.manual_labels = tx.manual_labels.bills + tx.manual_labels.expenses + tx.manual_labels.incomes
         self.id = "manual_label_buttons"
 
     def compose(self) -> ComposeResult:
-        """Compose the widget."""
+        """Compose the widget.
+
+        Yields:
+            button (Button): A button representing a manual label.
+
+        """
         for label in self.manual_labels:
             button = Button(f"{label}", id=f"manual_label_button_{label}", name=label)
             button.can_focus = False
@@ -35,15 +48,24 @@ class ManualLabelButtons(Widget):
 
 
 class TransactionDetailScreen(ModalScreen):
-    """Screen for displaying the details of a transaction."""
+    """Screen for displaying the details of a transaction.
+
+    Attributes:
+        CSS_PATH (str): The path to the CSS file for styling the screen.
+
+    Args:
+        ledger (Ledger): The ledger object.
+        transaction (Transaction): The transaction object.
+    """
 
     CSS_PATH = "../tcss/transactiondetailscreen.tcss"
 
     def __init__(self, ledger: Ledger, transaction: Transaction) -> None:
-        """Initialize the screen.
+        """Initialize the TransactionDetailScreen.
 
         Args:
-            transaction (str): Transaction ID
+            ledger (Ledger): The ledger object.
+            transaction (Transaction): The transaction object.
         """
         super().__init__()
         self.ledger = ledger
@@ -95,20 +117,32 @@ class TransactionDetailScreen(ModalScreen):
         self.vertical.border_title = "Transaction Details"
 
     def compose(self) -> ComposeResult:
-        """Compose the widgets."""
+        """Compose the widgets.
+
+        Yields:
+            Widget: The widgets to be displayed on the screen.
+        """
         with self.vertical:
             yield self.markdown_widget
             yield Label("Manual Labels (click to remove)")
             yield ManualLabelButtons(self.transaction)
 
     def on_key(self, key: events.Key) -> None:
-        """Handle keypress events."""
+        """Handle keypress events.
+
+        Args:
+            key (events.Key): The key that was pressed.
+        """
         close_screen_keys = ("escape", "q", "i")
         if key.key in close_screen_keys:
             self.dismiss(self.label_removed)
 
     def on_button_pressed(self, pressed: Button.Pressed) -> None:
-        """Remove the manual label corresponding to the pressed button."""
+        """Remove the manual label corresponding to the pressed button.
+
+        Args:
+            pressed (Button.Pressed): The pressed button object.
+        """
         label_to_remove = pressed.button.name
         if label_to_remove:
             self.ledger.remove_label_from_tx(self.transaction.account.number, self.transaction.txid, label_to_remove)
