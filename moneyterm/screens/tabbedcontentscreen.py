@@ -126,6 +126,14 @@ class TabbedContentScreen(Screen):
                 title="Import Error",
             )
             return
+        if not self.config["import_extension"]:
+            self.notify(
+                "Import extension not set. Please set it in the config tab.",
+                severity="warning",
+                timeout=7,
+                title="Import Error",
+            )
+            return
         import_dir = Path(self.config["import_directory"])
         if not import_dir.exists():
             self.notify(
