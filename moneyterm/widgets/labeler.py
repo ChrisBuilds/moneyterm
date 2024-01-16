@@ -212,7 +212,10 @@ class Labeler(Widget):
         Writes the labels dictionary to a JSON file.
 
         """
-        with open(Path("moneyterm/data/labels.json"), "w") as f:
+        data_dir_path = Path("moneyterm/data")
+        if not data_dir_path.exists():
+            data_dir_path.mkdir()
+        with (data_dir_path / Path("labels.json")).open("w") as f:
             json.dump(self.labels, f, indent=4)
 
     def compose(self) -> ComposeResult:
