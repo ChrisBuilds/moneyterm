@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "moneyterm"
-version = "0.0.1"
+version = "0.0.2"
 description = "Terminal finance dashboard."
 authors = ["Chris <741258+github@pm.me>"]
 license = "MIT"
@@ -18,7 +18,7 @@ textual-plotext = "^0.2.1"
 textual-dev = "^1.2.1"
 
 [tool.poetry.scripts]
-tte = "moneyterm.__main__:main"
+moneyterm = "moneyterm.__main__:main"
 
 
 [build-system]
