@@ -17,6 +17,10 @@ textual-plotext = "^0.2.1"
 [tool.poetry.group.dev.dependencies]
 textual-dev = "^1.2.1"
 
+[tool.poetry.scripts]
+tte = "moneyterm.__main__:main"
+
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
