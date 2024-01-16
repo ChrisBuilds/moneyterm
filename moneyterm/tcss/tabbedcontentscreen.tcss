@@ -29,6 +29,7 @@ TabbedContentScreen Labeler {
 TabbedContentScreen #labeler_grid{
     grid-size: 4 13;
     grid-rows: auto;
+    grid-columns: 15 25 20 30;
     border: round $secondary;
     border-title-align: center;
     
