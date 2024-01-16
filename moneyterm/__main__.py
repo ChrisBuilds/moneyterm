@@ -1,7 +1,5 @@
 from textual.app import App
 from moneyterm.utils.ledger import Ledger
-from pathlib import Path
-import pickle
 from moneyterm.screens.tabbedcontentscreen import TabbedContentScreen
 
 
@@ -22,6 +20,11 @@ class MoneyTerm(App):
         self.push_screen("tabbedcontent")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the app."""
     app = MoneyTerm()
     app.run()
+
+
+if __name__ == "__main__":
+    main()
