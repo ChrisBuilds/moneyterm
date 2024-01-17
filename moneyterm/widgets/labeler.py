@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import TypedDict
 from textual import on
 from textual.app import ComposeResult
@@ -24,6 +23,7 @@ from moneyterm.screens.addlabelscreen import AddLabelScreen
 from moneyterm.screens.renamelabelscreen import RenameLabelScreen
 from moneyterm.screens.confirmscreen import ConfirmScreen
 from moneyterm.widgets.transactiontable import TransactionTable
+from moneyterm.utils import config
 from datetime import datetime
 from decimal import Decimal
 
@@ -200,7 +200,7 @@ class Labeler(Widget):
     def on_mount(self):
         # check for, and load, json data for labels
         try:
-            with open(Path("moneyterm/data/labels.json"), "r") as f:
+            with config.LABELS_JSON.open("r") as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
             self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}
@@ -212,10 +212,7 @@ class Labeler(Widget):
         Writes the labels dictionary to a JSON file.
 
         """
-        data_dir_path = Path("moneyterm/data")
-        if not data_dir_path.exists():
-            data_dir_path.mkdir()
-        with (data_dir_path / Path("labels.json")).open("w") as f:
+        with config.LABELS_JSON.open("w") as f:
             json.dump(self.labels, f, indent=4)
 
     def compose(self) -> ComposeResult:

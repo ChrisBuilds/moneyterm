@@ -10,13 +10,14 @@ from textual.widgets import (
     TabPane,
 )
 from moneyterm.utils.ledger import Ledger
+from moneyterm.utils import config
 from moneyterm.widgets.overviewwidget import OverviewWidget
 from moneyterm.widgets.scopeselectbar import ScopeSelectBar
 from moneyterm.widgets.transactiontable import TransactionTable
 from moneyterm.widgets.labeler import Labeler
 from moneyterm.widgets.trends import TrendSelector
 from moneyterm.widgets.budgeter import Budgeter
-from moneyterm.widgets.config import Config, DEFAULT_CONFIG
+from moneyterm.widgets.config import Config
 
 
 class TabbedContentScreen(Screen):
@@ -96,7 +97,7 @@ class TabbedContentScreen(Screen):
                 severity="warning",
                 timeout=7,
             )
-            self.config = DEFAULT_CONFIG
+            self.config = config.DEFAULT_CONFIG
 
     def read_config_file(self):
         """
@@ -105,7 +106,7 @@ class TabbedContentScreen(Screen):
         Returns:
             dict: The contents of the configuration file.
         """
-        with Path("moneyterm/data/config.json").open("r") as config_file:
+        with config.CONFIG_JSON.open("r") as config_file:
             return json.load(config_file)
 
     def import_transactions(self) -> None:

@@ -13,8 +13,7 @@ from textual.widgets import (
 from textual.widgets.select import InvalidSelectValueError
 from textual.containers import Horizontal
 from moneyterm.utils.ledger import Ledger
-
-DEFAULT_CONFIG = {"import_directory": "", "import_extension": "", "account_aliases": {}, "default_account": ""}
+from moneyterm.utils.config import CONFIG_JSON
 
 
 class Config(Widget):
@@ -57,7 +56,7 @@ class Config(Widget):
         """
         super().__init__()
         self.ledger = ledger
-        self.config = DEFAULT_CONFIG
+        self.config: dict[str, str] = {}
         self.directory_input = Input(
             id="import_directory_input",
             placeholder="Import Directory Path",
@@ -168,15 +167,7 @@ class Config(Widget):
         """
         Load the configuration from a JSON file.
         """
-        try:
-            self.config = self.read_config_file()
-        except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
-            self.notify(
-                f"Failed to load config file. Exception: {str(e)}",
-                severity="warning",
-                timeout=7,
-            )
-            self.config = DEFAULT_CONFIG
+        self.config = self.read_config_file()
 
     def read_config_file(self):
         """
@@ -185,14 +176,14 @@ class Config(Widget):
         Returns:
             dict: The contents of the configuration file.
         """
-        with Path("moneyterm/data/config.json").open("r") as config_file:
+        with CONFIG_JSON.open("r") as config_file:
             return json.load(config_file)
 
     def write_config_json(self):
         """
         Write the configuration to a JSON file.
         """
-        with Path("moneyterm/data/config.json").open("w") as config_file:
+        with CONFIG_JSON.open("w") as config_file:
             json.dump(self.config, config_file, indent=4)
 
     @on(Button.Pressed, "#save_config_button")

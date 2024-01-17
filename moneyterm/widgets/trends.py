@@ -1,6 +1,5 @@
 from decimal import Decimal
 import json
-from pathlib import Path
 from textual import on
 from textual.app import ComposeResult
 from textual.reactive import reactive
@@ -22,6 +21,7 @@ from rich import box
 from textual.containers import Horizontal, VerticalScroll, Vertical, HorizontalScroll
 from moneyterm.utils.ledger import Ledger
 from moneyterm.widgets.labeler import LabelType
+from moneyterm.utils import config
 
 from datetime import datetime, timedelta
 
@@ -195,11 +195,7 @@ class TrendSelector(Widget):
 
     def on_mount(self) -> None:
         """Mount the widget."""
-        try:
-            with open(Path("moneyterm/data/labels.json"), "r") as f:
-                self.labels = json.load(f)
-        except FileNotFoundError:
-            self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}
+        self.load_labels_from_json()
         self.update_label_selector()
 
     def compose(self) -> ComposeResult:
@@ -228,7 +224,7 @@ class TrendSelector(Widget):
     def load_labels_from_json(self) -> None:
         """Load the labels from the json file."""
         try:
-            with open(Path("moneyterm/data/labels.json"), "r") as f:
+            with config.LABELS_JSON.open("r") as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
             self.labels = {"Bills": {}, "Expenses": {}, "Incomes": {}}

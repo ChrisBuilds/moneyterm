@@ -21,6 +21,7 @@ import pickle
 from ofxparse import Account as ofx_account  # type: ignore
 from ofxparse import Transaction as ofx_transaction  # type: ignore
 from moneyterm.utils import data_importer
+from moneyterm.utils import config
 from collections import defaultdict
 from pathlib import Path
 from decimal import Decimal
@@ -98,48 +99,26 @@ class Ledger:
     Attributes:
         accounts (dict[str, Account]): A dictionary of accounts.
         transactions (dict[tuple[str, str], Transaction]): A dictionary of transactions.
-        pickle_path (Path): The path to the pickle file.
     """
 
     def __init__(self) -> None:
         """Initialize a new instance of the Ledger class."""
         self.accounts: dict[str, Account] = dict()
         self.transactions: dict[tuple[str, str], Transaction] = dict()
-        self.pickle_path = Path("moneyterm/data/ledger.pkl")
 
-    def read_ledger_pkl(self) -> str:
+    def read_ledger_pkl(self) -> None:
         """Read the accounts and transactions dicts from a pickle file.
-
-        Args:
-            pkl_file (Path): Path to the pickle file.
 
         Returns:
             str: "success", "failure" or "not found"
         """
-        if not self.pickle_path.exists():
-            return "not found"
-        try:
-            with open(self.pickle_path, "rb") as f:
-                self.accounts, self.transactions = pickle.load(f)
-            return "success"
-        except:
-            return "failure"
+        with config.LEDGER_PKL.open("rb") as f:
+            self.accounts, self.transactions = pickle.load(f)
 
-    def save_ledger_pkl(self) -> str:
-        """Save the accounts and transactions dicts to a pickle file.
-
-        Args:
-            pkl_file (Path): Path to the pickle file.
-
-        Returns:
-            str: "success" or "failure"
-        """
-        try:
-            with open(self.pickle_path, "wb") as f:
-                pickle.dump((self.accounts, self.transactions), f)
-            return "success"
-        except:
-            raise
+    def save_ledger_pkl(self) -> None:
+        """Save the accounts and transactions dicts to a pickle file."""
+        with config.LEDGER_PKL.open("wb") as f:
+            pickle.dump((self.accounts, self.transactions), f)
 
     def load_ofx_data(self, data_file: Path) -> dict[str, int]:
         """

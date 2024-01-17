@@ -1,6 +1,5 @@
 from decimal import Decimal
 import json
-from pathlib import Path
 from textual import on
 from textual.app import ComposeResult
 from textual.reactive import reactive
@@ -21,6 +20,7 @@ from rich.text import Text
 from rich import box
 from textual.containers import Horizontal, VerticalScroll, Vertical
 from moneyterm.utils.ledger import Ledger
+from moneyterm.utils import config
 from moneyterm.widgets.labeler import LabelType
 
 from datetime import datetime
@@ -262,7 +262,7 @@ class Budgeter(Widget):
         """
         # check for, and load, json data for budgets
         try:
-            with open(Path("moneyterm/data/budgets.json"), "r") as f:
+            with config.BUDGETS_JSON.open() as f:
                 self.budgets = json.load(f)
         except FileNotFoundError as e:
             self.budgets = {}
@@ -292,7 +292,7 @@ class Budgeter(Widget):
             None
         """
         try:
-            with open(Path("moneyterm/data/labels.json"), "r") as f:
+            with config.LABELS_JSON.open() as f:
                 self.labels = json.load(f)
         except FileNotFoundError:
             pass
@@ -312,7 +312,7 @@ class Budgeter(Widget):
         """
         Writes the budgets dictionary to the budgets JSON file.
         """
-        with open(Path("moneyterm/data/budgets.json"), "w") as f:
+        with config.BUDGETS_JSON.open("w") as f:
             json.dump(self.budgets, f, indent=4)
 
     def update_budgets_table(self) -> None:

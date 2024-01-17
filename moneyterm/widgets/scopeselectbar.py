@@ -1,6 +1,3 @@
-from pathlib import Path
-import json
-
 from textual import on
 from textual.app import ComposeResult
 from textual.message import Message

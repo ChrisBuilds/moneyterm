@@ -9,7 +9,7 @@ from textual.widgets import (
 )
 from textual.containers import VerticalScroll
 from moneyterm.utils.ledger import Ledger, Transaction
-from pathlib import Path
+from moneyterm.utils import config
 import json
 
 
@@ -63,7 +63,7 @@ class QuickLabelScreen(ModalScreen):
     def on_mount(self) -> None:
         """Event handler called when the screen is mounted."""
         try:
-            with open(Path("moneyterm/data/labels.json"), "r") as f:
+            with config.LABELS_JSON.open() as f:
                 labels = json.load(f)
                 for label_type in ("Bills", "Expenses", "Incomes"):
                     for label in labels[label_type]:
