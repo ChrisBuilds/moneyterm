@@ -1,6 +1,7 @@
 from textual.app import App
 from moneyterm.utils.ledger import Ledger
 from moneyterm.screens.tabbedcontentscreen import TabbedContentScreen
+from moneyterm.utils import config
 
 
 class MoneyTerm(App):
@@ -13,6 +14,11 @@ class MoneyTerm(App):
 
     def __init__(self) -> None:
         super().__init__()
+        config.check_user_data_dir()
+        config.check_config_json()
+        config.check_labels_json()
+        config.check_budgets_json()
+        config.check_ledger_pkl()
         self.LEDGER.read_ledger_pkl()
 
     def on_mount(self) -> None:
