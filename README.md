@@ -10,6 +10,10 @@
   </p>
 </p>
 
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/moneyterm) ![PyPI - Version](https://img.shields.io/pypi/v/moneyterm) 
+
+
+
 ## Table Of Contents
 
 * [About](#tte)
