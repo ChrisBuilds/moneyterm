@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "moneyterm"
-version = "0.0.4"
+version = "0.0.5"
 description = "Terminal finance dashboard."
 authors = ["Chris <741258+github@pm.me>"]
 license = "MIT"
