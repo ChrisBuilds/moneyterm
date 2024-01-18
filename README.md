@@ -13,7 +13,6 @@
 ## Table Of Contents
 
 * [About](#tte)
-* [Requirements](#requirements)
 * [Installation](#installation)
 * [Screenshots](#screenshots)
 * [License](#license)
@@ -28,19 +27,16 @@ MoneyTerm is a Textual/Rich TUI based expense and budget tracker with the follow
 * Trend Analysis
 * Budget Tracking
 
-## Requirements
-
-* python = "^3.10"
-* ofxparse = "^0.21"
-* textual = "^0.44.0"
-* rich = "^13.7.0"
-* python-dateutil = "^2.8.2"
-* textual-plotext = "^0.2.1"
-
 ## Installation
 
 
-*Still in development, unreleased.
+```pipx install moneyterm```
+
+## Usage
+
+```moneyterm```
+
+MoneyTerm supports imported QFX/OFX files. These are typically available as export options from your bank's online banking website. To import transactions, enter an import directory and file extension in the Config tab. Any files discovered will be automatically imported. Duplicate transactions will be ignored.
 
 
 ## Screenshots
