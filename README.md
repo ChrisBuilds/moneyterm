@@ -14,7 +14,7 @@
 
 * [About](#tte)
 * [Installation](#installation)
-* [Screenshots](#screenshots)
+* [Usage](#usage)
 * [License](#license)
 
 
@@ -38,8 +38,6 @@ MoneyTerm is a Textual/Rich TUI based expense and budget tracker with the follow
 
 MoneyTerm supports importing QFX/OFX files. These are typically available as export options from your bank's online banking website. To import transactions, enter an import directory and file extension in the Config tab. Any files discovered will be automatically imported. Duplicate transactions will be ignored.
 
-
-## Screenshots
 #### Transaction Table
 
 Start by selecting an account, year, and month from the scope selection drop downs at the top of the application. The Transactions tab displays an interactive datatable of all transactions for the selected account/year/month. 
