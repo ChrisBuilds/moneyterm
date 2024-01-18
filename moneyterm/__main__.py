@@ -9,7 +9,7 @@ class MoneyTerm(App):
 
     LEDGER: Ledger = Ledger()
     CSS_PATH = "tcss/moneyterm.tcss"
-    BINDINGS = []
+    BINDINGS = [("ctrl+c", "quit", "Quit")]
     SCREENS = {"tabbedcontent": TabbedContentScreen(LEDGER)}
 
     def __init__(self) -> None:
