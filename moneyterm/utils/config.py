@@ -15,7 +15,7 @@ DEFAULT_CONFIG = {
     "account_aliases": {},
     "default_account": "",
 }
-DEFAULT_LABELS: dict[str, list[str]] = {"Bills": [], "Expenses": [], "Incomes": []}
+DEFAULT_LABELS: dict[str, dict[str, str]] = {"Bills": {}, "Expenses": {}, "Incomes": {}}
 
 
 def check_user_data_dir() -> None:
